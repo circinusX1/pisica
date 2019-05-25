@@ -21,17 +21,17 @@ static char HDR[] = "HTTP/1.0 200 OK\r\n"
                     "Content-length: %d\r\n"
                     "X-Timestamp: %d.%06d\r\n\r\n";
 
-sklsn::sklsn(sks& p, skcamsq& q):_p(p),_q(q)
+sksrv::sksrv(sks& p, skcamsq& q):_p(p),_q(q)
 {
 }
 
-sklsn::~sklsn()
+sksrv::~sksrv()
 {
     _cli.destroy();
     _cam.destroy();
 }
 
-bool    sklsn::spin(const char* auth, int cport, int cliport, pfn_cb cb)
+bool    sksrv::spin(const char* auth, int cport, int cliport, pfn_cb cb)
 {
     if(_cam.create(cport, SO_REUSEADDR, 0)>0)
     {
@@ -66,7 +66,7 @@ bool    sklsn::spin(const char* auth, int cport, int cliport, pfn_cb cb)
     return true;
 }
 
-int   sklsn::_fd_set(fd_set& rd)
+int   sksrv::_fd_set(fd_set& rd)
 {
     int ndfs = max(_cam.socket(),_cli.socket())+1;
     FD_ZERO(&rd);
@@ -75,7 +75,7 @@ int   sklsn::_fd_set(fd_set& rd)
     return ndfs;
 }
 
-void sklsn::_fd_check(fd_set& rd, int ndfs)
+void sksrv::_fd_check(fd_set& rd, int ndfs)
 {
     timeval tv {0,0xFFFF};
     int     is = ::select(ndfs, &rd, 0, 0, &tv);
@@ -98,13 +98,12 @@ void sklsn::_fd_check(fd_set& rd, int ndfs)
     return;
 }
 
-bool    sklsn::_on_cam()
+bool    sksrv::_on_cam()
 {
     skbase s;
 
     if(_cam.accept(s)>0)
     {
-
         char     enough[256];
         char     replymd5[256];
         int      len = s.receive((uint8_t*)enough, sizeof(enough));
@@ -122,15 +121,20 @@ bool    sklsn::_on_cam()
                 ::mg_md5(replymd5, toenc.c_str(), nullptr);
                 if(s.sendall(replymd5,strlen(replymd5))==(int)strlen(replymd5))
                 {
-                    int l = s.receive((uint8_t*)enough,4);
-                    if(l==4)
+                    config c;
+                    int l = s.receive((uint8_t*)&c,sizeof(c));
+                    if(l==sizeof(c))
                     {
-                        if(_p.has(mac))  // no camera with this mac in pool
+
+                        if(_p.has(mac))
                         {
                             LW("Conection refused: Already streaming from this MAC");
                             return false;
                         }
-                        skbase* pcam = new skcam(s);
+                        _readconf(mac, c);
+                        s.sendall((uint8_t*)&c,sizeof(c));
+
+                        skbase* pcam = new skcam(s,c);
                         pcam->name(mac);
                         _q.push(pcam);
                     }
@@ -141,7 +145,7 @@ bool    sklsn::_on_cam()
     return true;
 }
 
-bool    sklsn::_on_cli()
+bool    sksrv::_on_cli()
 {
     skbase s;
 
@@ -178,7 +182,7 @@ bool    sklsn::_on_cli()
     return true;
 }
 
-bool    sklsn::_display(skbase& s, const std::string& r)
+bool    sksrv::_display(skbase& s, const std::string& r)
 {
     if(r.find("HTTP") != std::string::npos) // is a web, send the header
     {
@@ -201,7 +205,7 @@ bool    sklsn::_display(skbase& s, const std::string& r)
     return true;
 }
 
-bool    sklsn::_on_jpeg(skbase& s,
+bool    sksrv::_on_jpeg(skbase& s,
                           const urlreq& htr, const std::string& r)
 {
     const skcam* pcs = _p.has(r);
@@ -213,4 +217,9 @@ bool    sklsn::_on_jpeg(skbase& s,
         return true;
     }
     return _display(s,r);
+}
+
+void    sksrv::_readconf(const std::string& mac, config& c)
+{
+
 }

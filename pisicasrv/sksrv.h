@@ -10,11 +10,12 @@ class skbase;
 class skcamsq;
 class sks;
 struct urlreq;
-class sklsn
+struct config;
+class sksrv
 {
 public:
-    sklsn(sks& p, skcamsq& q);
-    ~sklsn();
+    sksrv(sks& p, skcamsq& q);
+    ~sksrv();
     bool    spin(const char* auth, int cport, int cliport, pfn_cb cb);
 
 private:
@@ -25,7 +26,7 @@ private:
     bool    _display(skbase&, const std::string&);
     bool    _on_play(skbase&,   const urlreq&, const std::string&);
     bool    _on_jpeg(skbase&, const urlreq& htr, const std::string&);
-
+    void    _readconf(const std::string& mac, config& c);
 private:
     sks&        _p;
     skcamsq&        _q;

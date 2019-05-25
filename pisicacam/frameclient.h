@@ -6,7 +6,7 @@
 #include "sock.h"
 #include "streamq.h"
 #include "urlinfo.h"
-#include "config.h"
+#include "../common/config.h"
 #include <iostream>
 #include <curl/curl.h>
 
@@ -34,6 +34,8 @@ private:
     std::string    _auth="marius";
     int            _connectfail=0;
     time_t         _lastfrmtime;
+    int            _noframe=0;
+    config         _fconf;
 };
 
 #endif // PUSHER_H

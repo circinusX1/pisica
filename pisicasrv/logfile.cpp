@@ -20,8 +20,8 @@
 int Debug = 0x3;
 
 
-static std::string LogFile = "/var/log/isapi/srvvideosink.log";
-static int    logManage();
+static std::string LogFile = "/var/log/pisica/pisica.log";
+static int    lmanage();
 static size_t LogFileLastSz;
 static size_t MaxLogSize=20000000;
 static int    Max_LogFiles=40;
@@ -44,13 +44,13 @@ void strfl(std::stringstream& ss, bool fatal)
     }
     if (!log)
     {
-        std::cout << ("Can not open /var/log/isapi/srvvideosink.log for writing.\n");
+        std::cout << ("Can not open /var/log/pisica/pisica.log for writing.\n");
         std::cout.flush();
         std::cout << "\r\n";
         return;
     }
     ::fwrite(ss.str().c_str(),sizeof(char),ss.str().length(),log);
-    //std::cout << ss.str().c_str();
+    std::cout << ss.str().c_str();
     if(OnceIn100%100==0)
     {
         LogFileLastSz = ::ftell(log);
@@ -59,13 +59,13 @@ void strfl(std::stringstream& ss, bool fatal)
 
     if(chown){
         chmod(LogFile.c_str(), S_IRWXO|S_IRWXG|S_IRWXU);
-        system("chown ubuntu:www-data /var/log/isapi/srvvideosink.log");
+        system("chown ubuntu:www-data /var/log/pisica/pisica.log");
     }
     if(OnceIn100>10000)
     {
         if(LogFileLastSz > MaxLogSize)
         {
-            logManage();
+            lmanage();
         }
         OnceIn100=0;
     }
@@ -73,7 +73,7 @@ void strfl(std::stringstream& ss, bool fatal)
 }
 
 
-static int logManage()
+static int lmanage()
 {
     if(!LogFile.empty())
     {
@@ -109,14 +109,13 @@ static int logManage()
                 }
             }
             ::rename(LogFile.c_str(), fp);
-            ::unlink("/var/log/isapi/srvvidesinkweb.log");
 
             FILE* pf = ::fopen(LogFile.c_str(),"wb");
             if(pf)
             {
                 ::fclose(pf);
                 chmod(LogFile.c_str(), S_IRWXO|S_IRWXG|S_IRWXU);
-                system("chown popina:www-data /var/log/isapi/srvvidesink.log");
+                system("chown marius:www-data /var/log/pisica/pisica.log");
             }
         }
     }

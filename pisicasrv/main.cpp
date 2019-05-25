@@ -56,22 +56,22 @@ static void loop_callback();
 
 int main(int argc, char *argv[])
 {
-    sprk ps (12741);    //singleton, limit this instance to 1
+    sprk ps (42741);    //singleton, limit this instance to 1
 
     if(!ps())                 // second instance
     {
-        LI("already running");
+        std::cout << "already running\n";
         return -1;
     }
 
     if(argc < 4)
     {
-        LI(argv[0] <<  "CAM_PORT CLI_PORT PASSWORD");
+        std::cout<< argv[0] <<  "CAM_PORT CLI_PORT PASSWORD\n";
         exit(-1);
     }
     skcamsq q;
     sks p(q);
-    sklsn l(p,q);
+    sksrv l(p,q);
 
     LI(strweb_time());
     Sigs();

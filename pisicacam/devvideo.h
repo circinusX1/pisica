@@ -45,7 +45,7 @@
 #include <vector>
 #include "mmotion.h"
 #include "osthread.h"
-#include "config.h"
+#include "../common/config.h"
 #include "cimg.h"
 
 #define MAX_BUFFERS 4

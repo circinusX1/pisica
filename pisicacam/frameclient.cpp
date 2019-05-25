@@ -24,7 +24,6 @@ frameclient::frameclient(cbnoty ns,
 
 frameclient::~frameclient()
 {
-
     stop_thread();
 }
 
@@ -37,7 +36,7 @@ void frameclient::stop_thread()
 void frameclient::thread_main()
 {
     size_t      tinq;
-    time_t      whenc=time(0)+2;
+    time_t      whenc=time(0)+5;
     uint32_t    hdrsz;
     tcp_cli_sock cli;
 
@@ -46,28 +45,32 @@ void frameclient::thread_main()
     {
         if(time(0)>whenc && !cli.isopen())
         {
-            whenc=time(0)+8;
+            whenc=time(0) + 5; // every 2 seconds
             cli.destroy();
             cli.create(_url->port);
             cli.set_blocking(1);
 
             int val = true;
             ::setsockopt(cli.socket(), IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
-
             if(cli.try_connect(_url->host,_url->port,4000)==0)
             {
                 ++_connectfail;
                 cli.destroy();
                 ::msleep(256);
+                std::cout << "try cannot connect \n";
                 goto FLUSH;
             }
             if(cli.is_really_connected())
+            {
                 std::cout << "connected to: " <<  _url->host <<":" <<_url->port << "\n";
-            else{
+            }
+            else
+            {
                 ++_connectfail;
                 cli.destroy();
                 ::msleep(256);
-           }
+                std::cout << "try connect failed \n";
+            }
         }
         _connectfail=0;
         if(cli.is_really_connected())
@@ -86,6 +89,7 @@ void frameclient::thread_main()
             if(cli.sendall(sr.c_str(),sr.length()) != (int)sr.length())
             {
                 cli.destroy();
+                std::cout << "send all authorizarion failed \n";
                 goto FLUSH;
             }
 
@@ -102,24 +106,26 @@ void frameclient::thread_main()
                 std::string inc = (char*)incoming;
                 if(tokenex == inc)
                 {
-                    if(cli.sendall("1234",4) != 4)
+                    if(cli.sendall((const unsigned char*)&_cfg, sizeof(_cfg)) != sizeof(_cfg))
                     {
-                        std::cout <<  "confirmed failed \n";
                         cli.destroy();
+                        std::cout << "send all confirmation failed \n";
                         goto FLUSH;
                     }
                     _stream(cli);
                 }
                 else
                 {
-                    std::cout <<  incoming << "failed \n";
+                    std::cout << "password confirmation failed \n";
                     cli.destroy();
                 }
             }
         }
         else
         {
+            std::cout << "is not connected \n";
             cli.destroy();
+            ::sleep(1);
         }
 FLUSH:
         frame* pf = _pq->deque();
@@ -136,9 +142,9 @@ FLUSH:
 void frameclient::_stream(tcp_cli_sock& cli)
 {
     fd_set  rset;
-    config  conf;
 
     ::msleep(258);
+
     while(cli.is_really_connected())
     {
         FD_ZERO(&rset);
@@ -150,37 +156,55 @@ void frameclient::_stream(tcp_cli_sock& cli)
         {
             if(FD_ISSET(cli.socket(), &rset))
             {
-                int bytes = cli.receive((unsigned char*)&conf, sizeof(conf));
-                if(bytes >= sizeof(conf))
+                int bytes = cli.receive((unsigned char*)&_fconf, sizeof(_fconf));
+                if(bytes >= sizeof(_fconf))
                 {
-                    _cbn(&conf);
+                    _cbn(&_fconf);
+                }
+                if(bytes==0)
+                {
+                    cli.destroy();
+                    std::cout << "remote closed connection\n";
                 }
             }
         }
         frame* pf = _pq->deque();
         if(pf)
         {
-            if(Cfg.streame)
+            size_t sent = cli.sendall(pf->buffer(), pf->length());
+            if(sent != pf->length())
             {
-                size_t sent = cli.sendall(pf->buffer(), pf->length());
-                if(sent != pf->length())
-                {
-                    std::cout << "offline from: " <<  _url->host <<":" <<_url->port << "\n";
-                    cli.destroy();
-                    break;
-                }
-                if(sent>0)
-                    _bps+=sent;
-                _lastfrmtime=time(0);
-                if(_lastfrmtime>(_now+5))
-                {
-                    std::cout << "Pushes:" << _bps/5 << "\n";
-                    _bps=0;
-                    _now=_lastfrmtime;
-                }
+                std::cout << "remote closed " <<  _url->host <<":" <<_url->port << "\n";
+                cli.destroy();
+                break;
+            }
+            if(sent>0)
+                _bps+=sent;
+            _lastfrmtime=time(0);
+            if(_lastfrmtime>(_now+5))
+            {
+                std::cout << "Pushes:" << _bps/5 << "\n";
+                _bps=0;
+                _now=_lastfrmtime;
             }
             delete pf; pf=nullptr;
+            _noframe = 0;
         }
+        else {
+            if(++_noframe > 100)
+            {
+                std::cout << "no streaming. closing connection\n";
+                cli.destroy();
+            }
+        }
+        if(_fconf.motion==0 ||
+           _fconf.lapse==0 ||
+           _fconf.client==0)
+        {
+            cli.destroy();
+            break;
+        }
+
     }
 }
 

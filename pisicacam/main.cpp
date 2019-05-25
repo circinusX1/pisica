@@ -3,14 +3,41 @@
 #include "frameclient.h"
 #include "singleton.h"
 #include "devvideo.h"
-#include "config.h"
+#include "../common/config.h"
 #include "ffmt.h"
 #include "jpeger.h"
 
-bool   __alive = true;
-static umutex*     _pm;
-static config      _config = Cfg;
+bool                __alive = true;
+static umutex*      _pm;
+static bool         _dconf = false;
 std::string         _mac;
+config       _cfg = {0,
+                         "http://localhost:8888",
+                         "/dev/video0",
+                         1366,
+                         768,
+                         15,
+                         1,
+                         8000,
+                         1,
+                         1,
+                         1000,
+                         80,
+                         1,
+                         10,
+                         100,
+                         0,
+                         4,
+                         1,
+                         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+                         0,
+                        0,
+                        0
+
+             };
+
+void settigns(config* pc);
+
 
 void ControlC (int i)
 {
@@ -23,16 +50,13 @@ void ControlP (int i)
 {
 }
 
-void settigns(config* pc)
-{
-    AutoLock a(_pm);
-    _config = *pc;
-}
 
 int main(int argc, char *argv[])
 {
     SingleProc p (4590);
     umutex     m;
+    config     cfg;
+
     signal(SIGINT,  ControlC);
     signal(SIGABRT, ControlC);
     signal(SIGKILL, ControlC);
@@ -43,12 +67,13 @@ int main(int argc, char *argv[])
         std::cout << argv[0] << " running\n";
         return -1;
     }
-    outfilefmt*     ffmt = new jpeger(_config.quality);
+    outfilefmt*     ffmt = new jpeger(_cfg.quality);
     urlinfo u("http://localhost:8888");
     streamq q;
-    devvideo* pdv = new devvideo(&_config);
+    devvideo* pdv = new devvideo(&_cfg);
     if(pdv->open())
     {
+        int             moinertia=0;
         uint32_t        jpgsz = 0;
         uint8_t*        pjpg = 0;
         size_t          sz;
@@ -63,8 +88,7 @@ int main(int argc, char *argv[])
         int             delay = 10;
         frameclient c(settigns, &q, (const urlinfo*)&u, "marius");
 
-        _mac=::macaddr();
-
+        _mac = ::macaddr();
         _pm = &m;
         c.start_thread();
 
@@ -73,63 +97,71 @@ int main(int argc, char *argv[])
             now = gtc();
             do{
                 AutoLock a(_pm);
-                if(_config.dirty)
+                if(_dconf)
                 {
-                    pdv->close();
-                    delete pdv;
-                    pdv = new devvideo(&_config);
-                    if(pdv->open()==false)
-                    {
-                        break;
-                    }
-                    _config.dirty=0;
+                    cfg = _cfg;
+                    _dconf=false;
                 }
             }while(0);
+            if(cfg.dirty)
+            {
+                pdv->close();
+                delete pdv;
+                pdv = new devvideo(&cfg);
+                if(pdv->open()==false)
+                {
+                    break;
+                }
+                cfg.dirty=0;
+            }
+
             sz = 0;
             err = 0;
             const uint8_t*  pb422 = pdv->read(w, h, sz, err);
             if(pb422)
             {
-                jpgsz=ffmt->convert420(pb422, w, h, sz, _config.quality, &pjpg);
+                jpgsz=ffmt->convert420(pb422, w, h, sz, cfg.quality, &pjpg);
                 //
                 // motion
                 //
-                if(_config.motionl)
+                if(cfg.motionl)
                 {
-                    if(now-tickmove > _config.motionsnap)
+                    movepix = pdv->movement();
+                    if(--moinertia>0 || ( movepix >= cfg.motionl && movepix <= cfg.motionh))
                     {
-                        movepix = pdv->movement();
-                        if( movepix >= _config.motionl && movepix <= _config.motionh)
+                        //std::cout << "move pix=" << movepix << "\n";
+                        bstream = true;
+                        cfg.motion = movepix;
+                        if( movepix >= cfg.motionl && movepix <= cfg.motionh)
                         {
-                            std::cout << "move pix=" << movepix << "\n";
-                            bstream = true;
+                            moinertia = 15;
                         }
-                        else
-                        {
-                            bstream = false;
-                        }
-                        tickmove = now;
                     }
+                    else
+                    {
+                        bstream = false;
+                        cfg.motion =0;
+                    }
+                    tickmove = now;
                 }
 
-                if(_config.timelapse > 0)
+                if(cfg.timelapse > 0)
                 {
-                    if((now - lapsetick) > (uint32_t)_config.timelapse)
+                    if((now - lapsetick) > (uint32_t)cfg.timelapse)
                     {
                         bstream = true;
                         lapsetick = now;
+                        cfg.lapse = 1;
+                    }
+                    else {
+                        cfg.lapse = 0;
                     }
                 }
 
-                if(pdv->darkaverage() < _config.darkaverage)
+                if(bstream==false)
                 {
-                    bstream = false;
+                    bstream = true;//cfg.client; // true;
                 }
-                if(pdv->darkaverage() < _config.darkmotion)
-                {
-                    bstream = false;
-                }
-                bstream=true;
                 if(bstream)
                 {
                     frame* pf = new frame(true);
@@ -143,6 +175,7 @@ int main(int argc, char *argv[])
                         else
                         {
                             std::cout << "buffer to small \n";
+                            exit(2);
                         }
                     }
                 }
@@ -156,4 +189,12 @@ int main(int argc, char *argv[])
     delete pdv;
     delete ffmt;
     return 0;
+}
+
+
+void settigns(config* pc)
+{
+    AutoLock a(_pm);
+   _cfg = *pc;
+   _dconf=true;
 }

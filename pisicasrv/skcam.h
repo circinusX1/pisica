@@ -17,33 +17,36 @@
 #define SKCAM_H
 
 #include <set>
+#include "main.h"
 #include "skbase.h"
 #include "skcamsq.h"
+#include "../common/config.h"
 
 class skcam;
 class skweb;
-
 class skcam : public skbase
 {
 public:
-    skcam(skbase&);
+    skcam(skbase&, const config&);
     virtual ~skcam();
-    virtual void bind(skweb* b, bool addremove);
+    virtual void bind(skweb* b, bool addklie);
     virtual int ioio(const std::vector<skbase*>& clis);
     virtual bool destroy(bool be=true);
+    void    configit(const config& c);
 private:
     void _shoot(const vf& vf);
-    bool _deframe();
-
+    void _record();
 private:
-    std::set<skweb*>  _pclis;
-    size_t      _cap=0;
-    size_t      _bytesaccum=0;
-    skcamsq     _q;
-    vf       _vf;
-    std::string _recordname;
-    time_t      _now;
-    size_t      _bps;
+    std::set<skweb*>    _pclis;
+    size_t              _cap=0;
+    size_t              _bytesaccum=0;
+    skcamsq             _q;
+    vf                  _vf;
+    time_t              _now;
+    size_t              _bps;
+    umutex              _m;
+    config              _c;
+    bool                _dconf=false;
 };
 
 #endif // SKCAM_H

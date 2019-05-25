@@ -1,10 +1,10 @@
 
-#include "config.h"
+#include "../common/config.h"
 #include "mmotion.h"
 
 mmotion::mmotion(int w, int h, int nr):_w(w),_h(h),_nr(nr)
 {
-    _mw = Cfg.motionw;
+    _mw = _cfg.motionw;
     if(_mw>=w)
         _mw=w/2;
     else if(_mw<8)
@@ -42,7 +42,7 @@ int mmotion::has_moved(uint8_t* fmt420)
     uint8_t*          prowprev = _motionbufs[_motionindex ? 0 : 1];
     uint8_t*          prowcur = _motionbufs[_motionindex ? 1 : 0];
     int               pixels = 0;
-    int               mdiff = Cfg.motiondiff * 2.55;
+    int               mdiff = _cfg.motiondiff * 2.55;
     uint8_t           Y,YP;
     bool              reject=false;
 
@@ -56,7 +56,7 @@ int mmotion::has_moved(uint8_t* fmt420)
             reject=false;
             for(int r=0;r<16;r+=4)
             {
-                const rrect* rt = (const rrect*)&Cfg.reject[r];
+                const rrect* rt = (const rrect*)&_cfg.reject[r];
                 if(rt->xm || rt->ym || rt->xM || rt->yM)
                 {
                     if(x<rt->xm)continue;

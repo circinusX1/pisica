@@ -25,7 +25,7 @@
 #include <vector>
 #include "mmotion.h"
 #include "osthread.h"
-#include "config.h"
+#include "../common/config.h"
 
 
 class mmotion

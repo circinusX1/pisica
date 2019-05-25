@@ -52,3 +52,6 @@ HEADERS += \
     logfile.h \
     vf.h
 
+DISTFILES += \
+    ../../../../../../var/www/html/pisica.php
+
