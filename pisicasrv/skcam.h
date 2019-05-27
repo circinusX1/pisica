@@ -33,8 +33,10 @@ public:
     virtual int ioio(const std::vector<skbase*>& clis);
     virtual bool destroy(bool be=true);
     void    configit(const config& c);
+    config  configget(){return _c; }
+
 private:
-    void _shoot(const vf& vf);
+    int _shoot(const vf& vf);
     void _record();
 private:
     std::set<skweb*>    _pclis;

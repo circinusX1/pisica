@@ -35,9 +35,7 @@ void skcam::bind(skweb* pcs, bool addklie)
         if(_pclis.find(pcs)==_pclis.end())
         {
             AutoLock a(&_m);
-
             _pclis.insert(pcs);
-            _c.client = 1; //has client, inform camera
             _dconf=true;
         }
     }
@@ -57,8 +55,7 @@ void skcam::bind(skweb* pcs, bool addklie)
         if(_pclis.size()==0)
         {
             AutoLock a(&_m);
-            _c.client = 0;//gone client, inform camera
-            _dconf=true;
+            _dconf = true;
         }
     }
 }
@@ -75,8 +72,6 @@ int skcam::ioio(const std::vector<skbase*>& clis)
             bytes = this->receiveall((unsigned char*)_vf.buffer(), len);
             if(bytes == (int)len)
             {
-                _vf.set(len);
-                _shoot(_vf);
                 do{
                     AutoLock a(&_m);
                     if(_dconf)
@@ -85,9 +80,11 @@ int skcam::ioio(const std::vector<skbase*>& clis)
                         _dconf=false;
                     }
                 }while(0);
-                return 0;
+
+                _vf.set(len);
+                return _shoot(_vf);
             }
-            else //cannoit get frame
+            else //cannot get frame
             {
                 LW("remote colosed connetion. cannot get frame \n");
             }
@@ -99,11 +96,14 @@ int skcam::ioio(const std::vector<skbase*>& clis)
     }
     LW("remote colosed connetion. received 0 bytes \n");
     throw (skbase::CAM);
+    return 0;
 }
 
-void skcam::_shoot(const vf& vf)
+int skcam::_shoot(const vf& vf)
 {
     time_t now = time(0);
+    int ret = 0;
+
     _bps += vf.length();
     if(now > _now+5)
     {
@@ -115,8 +115,9 @@ void skcam::_shoot(const vf& vf)
     {
         for(const auto& cs : _pclis)
         {
-            if(cs->isopen()){
-                cs->snd(vf.buffer(),vf.length(),0);
+            if(cs->isopen())
+            {
+                ret += cs->snd(vf.buffer(),vf.length(),0);
             }
         }
     }
@@ -125,8 +126,8 @@ void skcam::_shoot(const vf& vf)
     {
         _record();
     }
-
     _vf.reset();
+    return ret;
 }
 
 void    skcam::configit(const config& c)

@@ -61,3 +61,7 @@ HEADERS += \
 
 unix|win32: LIBS += -lcurl -lpthread -lpng -ljpeg -lv4l2
 
+DISTFILES += \
+    ../../../../../../var/www/html/accesspi.php \
+    ../../../../../../var/www/html/pisica.php
+

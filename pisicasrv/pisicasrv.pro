@@ -35,6 +35,7 @@ SOURCES += main.cpp \
     logfile.cpp
 
 HEADERS += \
+    ../common/config.h \
     osthread.h \
     pks.h \
     request.h \
@@ -50,8 +51,9 @@ HEADERS += \
     md5.h \
     encrypt.h \
     logfile.h \
-    vf.h
+    vf.h \
+    vigenere.h
 
 DISTFILES += \
-    ../../../../../../var/www/html/pisica.php
+    ../pisicaweb/pisica.php
 

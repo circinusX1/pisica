@@ -9,7 +9,10 @@
 #include "sksrv.h"
 #include "encrypt.h"
 #include "request.h"
+#include "vigenere.h"
 #include "md5.h"
+
+#define TTL_CLI 30
 
 static char HDR[] = "HTTP/1.0 200 OK\r\n"
                     "Connection: close\r\n"
@@ -18,11 +21,11 @@ static char HDR[] = "HTTP/1.0 200 OK\r\n"
                     "Pragma: no-cache\r\n"
                     "Expires: Mon, 3 Jan 2000 12:34:56 GMT\r\n"
                     "Content-type: text/html\r\n"
-                    "Content-length: %d\r\n"
-                    "X-Timestamp: %d.%06d\r\n\r\n";
+                    "Content-length: %d\r\n\r\n%s";
 
 sksrv::sksrv(sks& p, skcamsq& q):_p(p),_q(q)
 {
+    p.link(this);
 }
 
 sksrv::~sksrv()
@@ -31,11 +34,11 @@ sksrv::~sksrv()
     _cam.destroy();
 }
 
-bool    sksrv::spin(const char* auth, int cport, int cliport, pfn_cb cb)
+bool sksrv::spin(const char* auth, int cport, int cliport, pfn_cb cb)
 {
     if(_cam.create(cport, SO_REUSEADDR, 0)>0)
     {
-        _auth = auth;
+        _srvauth = auth;
         fcntl(_cam.socket(), F_SETFD, FD_CLOEXEC);
         _cam.set_blocking(0);
         if(_cam.listen(4)!=0)
@@ -57,11 +60,30 @@ bool    sksrv::spin(const char* auth, int cport, int cliport, pfn_cb cb)
         LI("listening port "<< cliport);
     }
     fd_set r;
-    while(__aware)
+    time_t tl,now = time(0);
+    while(__alive)
     {
-        ::msleep(8);
+        tl = time(0);
+
         _fd_check(r, _fd_set(r));
         cb();
+        if(tl - now > 10)
+        {
+            AutoLock a(&_m);
+            now = tl;
+AGAIN:
+            for(auto& a : _cliswait)
+            {
+                if(now-a.second.tstamp > TTL_CLI)
+                {
+                    _p.cliexpired(a.first);
+                    _cliswait.erase(a.first);
+
+                    goto AGAIN;
+                }
+            }
+        }
+        ::msleep(16);
     }
     return true;
 }
@@ -81,7 +103,7 @@ void sksrv::_fd_check(fd_set& rd, int ndfs)
     int     is = ::select(ndfs, &rd, 0, 0, &tv);
     if(is ==-1) {
         std::cerr << "socket select() critical " << "\n";
-        __aware=false;
+        __alive=false;
         return;
     }
     if(is>0)
@@ -112,12 +134,12 @@ bool    sksrv::_on_cam()
             enough[len] = 0;
             std::string e = enough;
             // get mac
-            const std::string tok = e; // ::dekr(e,_auth);
+            const std::string tok = e; // ::dekr(e,_srvauth);
             size_t delim = tok.find("-");
             const std::string mac = tok.substr(0,delim);
             if(mac.length()==12)
             {
-                std::string toenc = e + _auth;
+                std::string toenc = e + _srvauth;
                 ::mg_md5(replymd5, toenc.c_str(), nullptr);
                 if(s.sendall(replymd5,strlen(replymd5))==(int)strlen(replymd5))
                 {
@@ -125,18 +147,23 @@ bool    sksrv::_on_cam()
                     int l = s.receive((uint8_t*)&c,sizeof(c));
                     if(l==sizeof(c))
                     {
-
                         if(_p.has(mac))
                         {
                             LW("Conection refused: Already streaming from this MAC");
                             return false;
                         }
-                        _readconf(mac, c);
-                        s.sendall((uint8_t*)&c,sizeof(c));
 
-                        skbase* pcam = new skcam(s,c);
-                        pcam->name(mac);
-                        _q.push(pcam);
+                        if(_regcamera(mac, c))
+                        {
+                            //s.sendall((uint8_t*)&c,sizeof(c));
+                            skbase* pcam = new skcam(s,c);
+                            pcam->name(mac);
+                            _q.push(pcam);
+                        }
+                        else
+                        {
+                            s.sendall((uint8_t*)&c,sizeof(c));
+                        }
                     }
                 }
             }
@@ -170,56 +197,148 @@ bool    sksrv::_on_cli()
 
         if(req.method=="GET") //is a web
         {
-
-            if(req.uri.length()==13) // is a image link <img src='/?MAC'> We wnforce an image with a ?
-            {
-                return _on_jpeg(s,req, req.uri.substr(1));
-            }
-            return _display(s, std::string(enough)); //we dont know what it is
+            return _on_player(s,req);
         }
-
     }
-    return true;
+    LI("CONNECCTION GONE");
+    s.destroy();
+    return false;
 }
 
 bool    sksrv::_display(skbase& s, const std::string& r)
 {
-    if(r.find("HTTP") != std::string::npos) // is a web, send the header
-    {
-        char    hdr[512];
-        struct  timeval timestamp;
-        struct  timezone tz = {5,0};
-
-        std::string channels = _p.show_cams(true);
-        gettimeofday(&timestamp, &tz);
-        sprintf(hdr,HDR,  channels.length(),
-                (int) timestamp.tv_sec,
-                (int) timestamp.tv_usec);
-        s.snd(hdr,strlen(hdr));
-        s.snd(channels.c_str(),channels.length());
-        return true;
-    }
-    std::string channels = _p.show_cams(false); // send the text
-    s.snd(channels.c_str(),channels.length());
-
     return true;
 }
 
-bool    sksrv::_on_jpeg(skbase& s,
-                          const urlreq& htr, const std::string& r)
+bool    sksrv::_on_player(skbase& s, const urlreq& req)
 {
-    const skcam* pcs = _p.has(r);
-    if(pcs && !_p.has(s)) //one client for this stream
+    std::vector<std::string> urlargs;
+    ::split(req.uri,'?',urlargs);
+    LI( req.uri );
+    if(urlargs.size())
     {
-        skimg* pcam = new skimg(s);
-        pcam->name(r);
-        _q.push(pcam);
-        return true;
+        std::string mac = urlargs[0].substr(1);
+        std::map<std::string, ClisWait>::iterator cli = _cliswait.find(mac);
+        if(cli != _cliswait.end()) // no camera was here yet
+        {
+            _authcli(s, cli->second, mac, urlargs);
+            if(cli->second.aok==true)
+            {
+                const skcam*  pcs = _p.has(mac);
+                if(pcs && !_p.has(s))
+                {
+                    LI("new pol ");
+                    skimg* pweb = new skimg(s);
+                    pweb->name(mac);
+                    _q.push(pweb);
+                    return true;
+                }
+            }
+        }
     }
-    return _display(s,r);
+    s.destroy();
+    LI("CON GONE ");
+    return false;
 }
 
-void    sksrv::_readconf(const std::string& mac, config& c)
+/**
+ * @brief _authcli
+ * @param cw
+ * @param mac
+ */
+void sksrv::_authcli(skbase& s,
+                     ClisWait& cw,
+                     const std::string& mac,
+                     const std::vector<std::string>& args)
 {
+    // send challange token and wait the md5
+    if(args.size()>1)
+    {
+        std::vector<std::string> params;
+        ::split(args[1],'&',params);
+        for(const auto& p : params)
+        {
+            size_t ce = p.find('=');
+            if(ce!=std::string::npos)
+            {
+                std::string k = p.substr(0,ce);
+                std::string v = p.substr(ce+1);
 
+                if(k=="auth")
+                {
+                    if(cw.passw == v)
+                    {
+                        ::msleep(128);
+                        cw.aok = true;
+                        cw.config.client = 1;
+                        cw.tstamp = time(0);
+                        return;
+                    }
+                }
+            }
+        }
+
+        char md5[40];
+
+        if(args[1]=="token")
+        {
+            srand(time(0));
+            std::string token = std::to_string(rand());//  + cw.config.authplay;
+            std::string encri = cw.config.authplay;
+            std::string dec = xdecrypt(encri, Campas);
+            // dec is cam token
+            char out[1024];
+
+            std::string tt = token+dec;\
+            tt+="-";
+            tt+=Srvpas;
+            std::cout << "tokdec = " << tt << "\n";
+            mg_md5(md5, tt.c_str(), 0);
+            cw.passw = md5; //we expect this
+            std::cout << "psw = " << cw.passw << "\n";
+
+            sprintf(out,HDR, token.length(), token.c_str());
+            s.send(out, strlen(out));
+            ::msleep(256);
+        }
+        else if(args[1]=="config")
+        {
+            ;
+        }
+    }
+    s.destroy();
+    throw s.type();
+}
+
+/**
+ * @brief sksrv::_regcamera
+ * @param mac
+ * @param c
+ */
+bool    sksrv::_regcamera(const std::string& mac, config& cf)
+{
+    const auto& cam = _cliswait.find(mac);
+
+    if(cam==_cliswait.end())
+    {
+        ClisWait        cw;
+
+        cw.tstamp      = time(0);
+        cw.config      = cf;
+        cw.aok         = false;
+        _cliswait[mac] = cw;
+        return false;
+    }
+    cf = cam->second.config;
+    return true;
+}
+
+void    sksrv::keepcam(const std::string& mac)
+{
+    AutoLock a(&_m);
+    std::map<std::string, ClisWait>::iterator f = _cliswait.find(mac);
+    if(f!=_cliswait.end())
+    {
+        f->second.tstamp=time(0);
+    }
 }

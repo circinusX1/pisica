@@ -11,7 +11,7 @@ struct urlreq;
 class skcamsq;
 class skweb;
 class skcam;
-
+class sksrv;
 class sks : public OsThread
 {
 public:
@@ -30,6 +30,8 @@ public:
     void signal_to_stop();
     void _kill_sck(const urlreq& req);
     bool has_cam(const std::string& pcsname);
+    void link(sksrv *srv){_srv=srv;}
+    void cliexpired(const std::string& mac);
 private:
     int _fd_set(fd_set& fdr);
     bool _fd_check(fd_set& fdr, int ndfs);
@@ -43,12 +45,14 @@ private:
     void _kam_out(skcam* cs);
 
 private:
-
     typedef std::map<std::string,camclis*>::iterator coniterator;
     typedef std::map<std::string,camclis*>::const_iterator kconiterator;
-    skcamsq&                       _q;
-    std::map<std::string,camclis*>     _pool;
+    skcamsq&                        _q;
+    std::map<std::string,camclis*>  _pool;
     umutex                          _m;
+    sksrv*                          _srv = nullptr;
+    int                             _lops = 0;
+    std::string                     _expired;
 };
 
 #endif // POOL_H

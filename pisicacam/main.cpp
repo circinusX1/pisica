@@ -6,21 +6,26 @@
 #include "../common/config.h"
 #include "ffmt.h"
 #include "jpeger.h"
+#include "vigenere.h"
 
 bool                __alive = true;
 static umutex*      _pm;
 static bool         _dconf = false;
+static std::string  _sp;// = argv[1];
+static std::string  _pp;// = argv[1];
+static std::string  _tok;// = argv[1];
 std::string         _mac;
 config       _cfg = {0,
                          "http://localhost:8888",
                          "/dev/video0",
+                         "",
                          1366,
                          768,
-                         15,
-                         1,
-                         8000,
-                         1,
-                         1,
+                         1500,
+                         50,
+                         800,
+                         100,
+                         10,
                          1000,
                          80,
                          1,
@@ -33,10 +38,9 @@ config       _cfg = {0,
                          0,
                         0,
                         0
-
              };
 
-void settigns(config* pc);
+void setts(config* pc);
 
 
 void ControlC (int i)
@@ -55,7 +59,6 @@ int main(int argc, char *argv[])
 {
     SingleProc p (4590);
     umutex     m;
-    config     cfg;
 
     signal(SIGINT,  ControlC);
     signal(SIGABRT, ControlC);
@@ -67,12 +70,20 @@ int main(int argc, char *argv[])
         std::cout << argv[0] << " running\n";
         return -1;
     }
+    // srv srcpass campass
+    if(argc!=5)
+    {
+        std::cout << argv[0] << "server server-password cam-password cam-token\n";
+        exit(1);
+    }
+
     outfilefmt*     ffmt = new jpeger(_cfg.quality);
-    urlinfo u("http://localhost:8888");
+    urlinfo u(argv[1]);
     streamq q;
     devvideo* pdv = new devvideo(&_cfg);
     if(pdv->open())
     {
+        config          cfg;
         int             moinertia=0;
         uint32_t        jpgsz = 0;
         uint8_t*        pjpg = 0;
@@ -86,8 +97,13 @@ int main(int argc, char *argv[])
         bool            bstream = false;
         time_t          now;
         int             delay = 10;
-        frameclient c(settigns, &q, (const urlinfo*)&u, "marius");
+        frameclient     c(setts, &q, (const urlinfo*)&u, argv[2]);
 
+        _sp = argv[2];
+        _pp = argv[3];
+        _tok = argv[4];
+        ::strcpy(_cfg.authplay,xencrypt(_tok,_pp).c_str());
+        _cfg = _cfg;
         _mac = ::macaddr();
         _pm = &m;
         c.start_thread();
@@ -192,9 +208,10 @@ int main(int argc, char *argv[])
 }
 
 
-void settigns(config* pc)
+void setts(config* pc)
 {
     AutoLock a(_pm);
    _cfg = *pc;
+    ::strcpy(_cfg.authplay,xencrypt(_tok,_pp).c_str());
    _dconf=true;
 }

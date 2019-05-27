@@ -3,6 +3,7 @@
 #include "sks.h"
 #include "skcam.h"
 #include "skweb.h"
+#include "sksrv.h"
 #include "skcamsq.h"
 
 sks::~sks()
@@ -92,10 +93,9 @@ std::string sks::show_cams(bool webreq)const
 void sks::thread_main()
 {
     fd_set  fdr;
-    int     ndfs;
-    bool    dirty=false;
+    int     ndfs,dirty;
 
-    while(!is_stopped() && __aware)
+    while(!is_stopped() && __alive)
     {
         _new_conn(dirty);
         ndfs = _fd_set(fdr);
@@ -146,11 +146,13 @@ bool sks::_fd_check(fd_set& fdr, int ndfs)
 {
     bool    dirty = false;
     timeval tv {0,200};
+    int     sent;
     int     sel =::select(ndfs,&fdr,0,0,&tv);
 
+    ++_lops;
     if(sel==-1){
         std::cerr << " socket select error critical \n";
-        __aware=false;
+        __alive=false;
         return false;    //dirty
     }
     if(sel==0){ return true; }
@@ -160,7 +162,11 @@ bool sks::_fd_check(fd_set& fdr, int ndfs)
         if(FD_ISSET(a.second->_cam->socket(),&fdr))
         {
             try{
-                a.second->_cam->ioio(a.second->_clis);
+                sent = a.second->_cam->ioio(a.second->_clis);
+                if(sent && ((++_lops&0x1F)==0x1F)) //sent to clis
+                {
+                    _srv->keepcam(a.second->_cam->name());
+                }
             }
             catch(skbase::STYPE& s)
             {
@@ -241,8 +247,6 @@ void sks::_new_conn(bool dirty)
                 _kli_in(pexistentCam, pcs);
                 return;
             }
-
-
         }
         /// we dont know the request
         delete pcs;
@@ -270,6 +274,17 @@ AGAIN:
         //
         // if camera got away
         //
+        if(!_expired.empty())
+        {
+            if(_expired==pr->_cam->name())
+            {
+                config cfg = pr->_cam->configget();
+                cfg.client=0;
+                pr->_cam->configit(cfg);
+            }
+            _expired.clear();
+        }
+
         if(pr->_cam->isopen()==false)
         {
             for(auto& client : pr->_clis)
@@ -350,3 +365,8 @@ void sks::_kam_out(skcam* cs)
 
 }
 
+void sks::cliexpired(const std::string& mac)
+{
+    AutoLock a(&_m);
+    _expired = mac;
+}

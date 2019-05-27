@@ -1,8 +1,7 @@
 
 #include "vigenere.h"
 
-extern std::string AVAILABLE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
-
+std::string AVAILABLE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
 
 int index(char c) {
     for(size_t ii = 0; ii < AVAILABLE_CHARS.size(); ii++) {
@@ -33,6 +32,8 @@ std::string extend_key(std::string& msg, std::string& key) {
 
 std::string encrypt_vigenere(std::string& msg, std::string& key) {
     int msgLen = msg.size(), keyLen = key.size(), i, j;
+    (void)(j);
+    (void)(keyLen);
     std::string encryptedMsg(msgLen, 'x');
     // char newKey[msgLen], encryptedMsg[msgLen], decryptedMsg[msgLen];
 
@@ -67,3 +68,20 @@ std::string decrypt_vigenere(std::string& encryptedMsg, std::string& newKey) {
     decryptedMsg[i] = '\0';
     return decryptedMsg;
 }
+
+
+inline std::string encrypt(const std::string& msg, std::string& key) {
+    std::string b64_str = base64_encode(msg);
+    std::string vigenere_msg = encrypt_vigenere(b64_str, key);
+    // std::cout << vigenere_msg << std::endl;
+    return vigenere_msg;
+}
+
+
+inline std::string decrypt( std::string& encrypted_msg,  std::string& key) {
+    std::string newKey = extend_key(encrypted_msg, key);
+    std::string b64_encoded_str = decrypt_vigenere(encrypted_msg, newKey);
+    std::string b64_decode_str = base64_decode(b64_encoded_str);
+    return b64_decode_str;
+}
+

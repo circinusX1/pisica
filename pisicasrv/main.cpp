@@ -9,8 +9,10 @@
 #include "pks.h"
 #include "logfile.h"
 
-
-bool        __aware=true;
+std::string Campas;
+std::string Camtok;
+std::string Srvpas;
+bool        __alive=true;
 std::string _zs;
 int         __cam_port = 8788;
 /**
@@ -20,7 +22,7 @@ int         __cam_port = 8788;
 static void ControlC (int i)
 {
     std::cerr << "Ctrl+C signal:" << i << ", user exit";
-    __aware = false;
+    __alive = false;
 }
 
 /**
@@ -64,15 +66,18 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    if(argc < 4)
+    if(argc != 6)
     {
-        std::cout<< argv[0] <<  "CAM_PORT CLI_PORT PASSWORD\n";
+        std::cout<< argv[0] <<  "CAM_PORT CLI_PORT PASSWORD campas camtok\n";
         exit(-1);
     }
     skcamsq q;
-    sks p(q);
+    sks   p(q);
     sksrv l(p,q);
 
+    Srvpas = argv[3];
+    Campas = argv[4];
+    Camtok = argv[5];
     LI(strweb_time());
     Sigs();
     p.start_thread();

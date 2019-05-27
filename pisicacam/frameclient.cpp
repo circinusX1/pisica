@@ -123,7 +123,6 @@ void frameclient::thread_main()
         }
         else
         {
-            std::cout << "is not connected \n";
             cli.destroy();
             ::sleep(1);
         }
@@ -165,6 +164,13 @@ void frameclient::_stream(tcp_cli_sock& cli)
                 {
                     cli.destroy();
                     std::cout << "remote closed connection\n";
+                    break;
+                }
+                if(_fconf.motion+_fconf.lapse+_fconf.client==0)
+                {
+                    cli.destroy();
+                    std::cout << "remote does not want streaming\n";
+                    break;
                 }
             }
         }
@@ -197,14 +203,6 @@ void frameclient::_stream(tcp_cli_sock& cli)
                 cli.destroy();
             }
         }
-        if(_fconf.motion==0 ||
-           _fconf.lapse==0 ||
-           _fconf.client==0)
-        {
-            cli.destroy();
-            break;
-        }
-
     }
 }
 

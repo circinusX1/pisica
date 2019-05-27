@@ -1,28 +1,17 @@
-
-<html>
-  <head>
-  </head>
-  <body bgcolor="#E6E6FA">
-    <center>
 <?php
+    $MAC = "9cb654c5f074";
+    if(!isset($_GET['srv'])) die("missing parameter server password: srv=marius");
+    if(!isset($_GET['cam'])) die("missing parameter camera token: cam=token");
 
-    $fc = file_get_contents("http://{$_SERVER['HTTP_HOST']}:8889");
-    if(strstr($fc,"img"))
+    //ask for token
+    $token = @file_get_contents("http://localhost:8889/{$MAC}?token");
+    if(strlen($token))
     {
-        $lines= explode("\r\n",$fc);
-        foreach($lines as $l)
-        {
-            if(strstr($l,"img"))
-            {
-                $link=str_replace("&#60;","<",$l);
-                $link=str_replace("&#62;",">",$link);
-                $link=str_replace("127.0.0.1",$_SERVER['HTTP_HOST'],$link);
-                echo $link;
-            }
-        }
+        // salt the token + cam token + srv password
+        $sig = md5($token.$_GET['cam']."-".$_GET['srv']);
+        echo "9cb654c5f074?auth={$sig}<br>";
+        echo "<img width='640px' src='http://localhost:8889/9cb654c5f074?auth={$sig}' />";
     }
-?>
-    </center>
-  </body>
-</html>
+    echo "<br><li>No image.. refresh the page!<br>";
 
+?>

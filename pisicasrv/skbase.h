@@ -53,6 +53,7 @@ public:
     virtual int snd(const uint8_t* b, size_t room, uint32_t extra=0);
     virtual int snd(const char* b, size_t room, uint32_t extra=0);
     virtual int ioio(const std::vector<skbase*>& clis){return 0;};
+    int         oi(char* outin, size_t len,size_t maxlen);
     int recdata();
     const std::string name()const{return _name;}
     void name(const std::string m){_name=m;}

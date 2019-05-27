@@ -21,6 +21,7 @@ struct __attribute__((__packed__)) config
     uint8_t dirty;
     char url[128];
     char device[64];
+    char authplay[64];
     int  w;
     int  h;
     int  fps;

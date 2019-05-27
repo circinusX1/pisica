@@ -1,4 +1,5 @@
 #include "skimg.h"
+#include "logfile.h"
 
 /**
  * @brief JpegHdr  (multipart animated JPEG)
@@ -20,6 +21,7 @@ skimg::skimg(skbase& o):skweb(o)
 
 skimg::~skimg()
 {
+    LI("image disconneted");
 }
 
 int skimg::snd(const uint8_t* b, size_t len,uint32_t extra)

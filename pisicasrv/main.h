@@ -7,7 +7,7 @@
 #include <vector>
 #include "logfile.h"
 
-extern bool __aware;
+extern bool __alive;
 extern std::string _zs;
 extern int __cam_port;
 #define EOS '\0'
@@ -99,5 +99,8 @@ inline int ParseUrl(const char *u, UrlInfo *urlinfo)
 
 #define NPOS std::string::npos
 #define DELETE_PTR(p)   if(p) delete p; p=nullptr
-
+#define OUT std::cout
+extern std::string Campas;
+extern std::string Camtok;
+extern std::string Srvpas;
 #endif // MM_H
