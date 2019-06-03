@@ -6,6 +6,18 @@
 #include "skweb.h"
 #include "../common/config.h"
 
+static char JpegHdr[]="Content-Type: image/jpeg\r\n"
+                      "Content-Length: %d\r\n"
+                      "X-Timestamp: %d.%d\r\n\r\n";
+static char JpegPart[] = "\r\n--MariusMariusMarius\r\nContent-type: image/jpeg\r\n";
+static char JpegPartHeader[] = "HTTP/1.0 200 OK\r\n"
+                               "Connection: close\r\n"
+                               "Server: pisica/1.0\r\n"
+                               "Cache-Control: no-cache\r\n"
+                               "Content-Type: multipart/x-mixed-replace;boundary=MariusMariusMarius\r\n"
+                               "\r\n"
+                               "--MariusMariusMarius\r\n";
+
 skcam::skcam(skbase& o, const config& c):skbase(o,skbase::CAM),
     _vf(vf::STACK)
 {
@@ -70,7 +82,7 @@ int skcam::ioio(const std::vector<skbase*>& clis)
         {
             _vf.reset();
             bytes = this->receiveall((unsigned char*)_vf.buffer(), len);
-            if(bytes == (int)len)
+            if(bytes == (uint32_t)len)
             {
                 do{
                     AutoLock a(&_m);
@@ -122,9 +134,9 @@ int skcam::_shoot(const vf& vf)
         }
     }
 
-    if(_c.lapse || _c.motion)
+    if(_c.lapse || _c.motion || _c.streame || _c.client)
     {
-        _record();
+        _record(vf.buffer(),vf.length());
     }
     _vf.reset();
     return ret;
@@ -137,7 +149,34 @@ void    skcam::configit(const config& c)
     _dconf = true;
 }
 
-void skcam::_record()
+void skcam::_record(const uint8_t* pb, size_t l)
 {
+    std::string fn = "/tmp/"; fn+=name(); fn+=".jpg";
+    bool nf = ::access(fn.c_str(),0)!=0;
+
+    FILE* pf = ::fopen(fn.c_str(),"ab");
+    if(pf)
+    {
+        char buffer[1024];
+        struct timeval timestamp;
+        struct timezone tz = {5,0};
+        gettimeofday(&timestamp, &tz);
+
+        if(nf){
+            ::fwrite((const uint8_t*)JpegPartHeader,1, strlen(JpegPartHeader), pf);
+        }
+
+        size_t hl = ::sprintf(buffer, JpegHdr,
+                              (int)l,
+                              (int)timestamp.tv_sec,
+                              (int)timestamp.tv_usec);
+
+        ::fwrite((const uint8_t*)buffer,1,hl,pf);
+        ::fwrite(pb, 1, l, pf);
+        ::fwrite((const uint8_t*)JpegPart,1,strlen(JpegPart),pf);
+
+
+        ::fclose(pf);
+    }
 }
 

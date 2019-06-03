@@ -80,9 +80,7 @@ void frameclient::thread_main()
 
             // clear text mac + random
             std::string sr = _mac + "-";
-            sr += std::to_string(rand()) +
-                  std::to_string(rand()) +
-                  std::to_string(rand());
+            sr += std::to_string(rand());
             ::mg_md5(md5sig,(sr+_auth).c_str(),nullptr);
             std::string tokenex = md5sig;
 

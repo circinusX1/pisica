@@ -217,12 +217,15 @@ bool    sksrv::_on_player(skbase& s, const urlreq& req)
     LI( req.uri );
     if(urlargs.size())
     {
+
         std::string mac = urlargs[0].substr(1);
         std::map<std::string, ClisWait>::iterator cli = _cliswait.find(mac);
         if(cli != _cliswait.end()) // no camera was here yet
         {
             _authcli(s, cli->second, mac, urlargs);
-            if(cli->second.aok==true)
+            if(cli->second.aok==true &&
+                    urlargs.size()>1 &&
+                    urlargs[1].find("image")!=std::string::npos)
             {
                 const skcam*  pcs = _p.has(mac);
                 if(pcs && !_p.has(s))
@@ -264,7 +267,7 @@ void sksrv::_authcli(skbase& s,
                 std::string k = p.substr(0,ce);
                 std::string v = p.substr(ce+1);
 
-                if(k=="auth")
+                if(k=="image")
                 {
                     if(cw.passw == v)
                     {
@@ -272,6 +275,19 @@ void sksrv::_authcli(skbase& s,
                         cw.aok = true;
                         cw.config.client = 1;
                         cw.tstamp = time(0);
+                        return;
+                    }
+                }
+                else if(k=="config")
+                {
+                    if(cw.passw == v)
+                    {
+                        LI("configuring by params");
+                        //
+                        // config the streaming
+                        //
+                        _config_cam(mac, args);
+                        s.destroy();
                         return;
                     }
                 }
@@ -303,7 +319,7 @@ void sksrv::_authcli(skbase& s,
         }
         else if(args[1]=="config")
         {
-            ;
+            LI("configuration");
         }
     }
     s.destroy();
@@ -341,4 +357,8 @@ void    sksrv::keepcam(const std::string& mac)
     {
         f->second.tstamp=time(0);
     }
+}
+
+void sksrv::_config_cam(const std::string& mac, const std::vector<std::string>& args)
+{
 }

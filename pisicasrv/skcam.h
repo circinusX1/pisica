@@ -37,7 +37,7 @@ public:
 
 private:
     int _shoot(const vf& vf);
-    void _record();
+    void _record(const uint8_t* pb, size_t l);
 private:
     std::set<skweb*>    _pclis;
     size_t              _cap=0;

@@ -10,7 +10,7 @@
         // salt the token + cam token + srv password
         $sig = md5($token.$_GET['cam']."-".$_GET['srv']);
         echo "9cb654c5f074?auth={$sig}<br>";
-        echo "<img width='640px' src='http://localhost:8889/9cb654c5f074?auth={$sig}' />";
+        echo "<img width='640px' src='http://localhost:8889/9cb654c5f074?image={$sig}' />";
     }
     echo "<br><li>No image.. refresh the page!<br>";
 

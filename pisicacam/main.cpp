@@ -17,7 +17,7 @@ static std::string  _tok;// = argv[1];
 std::string         _mac;
 config       _cfg = {0,
                          "http://localhost:8888",
-                         "/dev/video0",
+                         "/dev/video2",
                          "",
                          1366,
                          768,

@@ -55,5 +55,6 @@ HEADERS += \
     vigenere.h
 
 DISTFILES += \
+    ../pisicaweb/local.php \
     ../pisicaweb/pisica.php
 

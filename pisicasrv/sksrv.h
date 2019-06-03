@@ -41,6 +41,7 @@ private:
                      ClisWait& cw,
                      const std::string& mac,
                      const std::vector<std::string>& args);
+    void _config_cam(const std::string& mac, const std::vector<std::string>& args);
 
 private:
     umutex          _m;
