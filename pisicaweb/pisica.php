@@ -1,17 +1,21 @@
 <?php
-    $MAC = "9cb654c5f074";
     if(!isset($_GET['srv'])) die("missing parameter server password: srv=marius");
     if(!isset($_GET['cam'])) die("missing parameter camera token: cam=token");
+    if(!isset($_GET['mac'])) die("missing parameter camera token: mac=mak");
 
     //ask for token
-    $token = @file_get_contents("http://localhost:8889/{$MAC}?token");
+    $MAC = $_GET['mac'];
+    $thisip = $_SERVER['SERVER_ADDR'];
+    $token = @file_get_contents("http://{$thisip}:8889/{$MAC}?token");
     if(strlen($token))
     {
         // salt the token + cam token + srv password
         $sig = md5($token.$_GET['cam']."-".$_GET['srv']);
-        echo "9cb654c5f074?auth={$sig}<br>";
-        echo "<img width='640px' src='http://localhost:8889/9cb654c5f074?image={$sig}' />";
+        echo "{$MAC}?auth={$sig}<br>";
+        echo "<img width='640px' src='http://{$thisip}:8889/{$MAC}?auth={$sig}' />";
     }
-    echo "<br><li>No image.. refresh the page!<br>";
-
+    else
+    {
+        echo "<br><li>No image.. refresh the page!<br>";
+    }
 ?>
