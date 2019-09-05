@@ -37,3 +37,6 @@ Descripption under construction.
 
 https://youtu.be/Tq8YrUxraMg
 
+R-PI Preloaded SD Cards at https://www.redypis.org
+
+
