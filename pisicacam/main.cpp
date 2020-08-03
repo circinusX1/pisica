@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     // srv srcpass campass
     if(argc!=5)
     {
-        std::cout << argv[0] << "server server-password cam-password cam-token\n";
+        std::cout << argv[0] << " server server-password cam-password cam-token\n";
         exit(1);
     }
 
