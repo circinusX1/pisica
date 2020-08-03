@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 
     if(argc != 6)
     {
-        std::cout<< argv[0] <<  "CAM_PORT CLI_PORT PASSWORD campas camtok\n";
+        std::cout<< argv[0] <<  " CAM_PORT CLI_PORT PASSWORD campas camtok\n";
         exit(-1);
     }
     skcamsq q;
