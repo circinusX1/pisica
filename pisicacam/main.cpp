@@ -71,15 +71,18 @@ int main(int argc, char *argv[])
         return -1;
     }
     // srv srcpass campass
-    if(argc!=5)
+    if(argc!=6)
     {
-        std::cout << argv[0] << "  server server-password cam-password cam-token\n";
+        std::cout << argv[0] << "  server server-password cam-password cam-token dev/video# \n";
+        std::cout << "\n";
         exit(1);
     }
 
     outfilefmt*     ffmt = new jpeger(_cfg.quality);
     urlinfo u(argv[1]);
     streamq q;
+
+    ::strcpy(_cfg.device,argv[5]);
     devvideo* pdv = new devvideo(&_cfg);
     if(pdv->open())
     {
