@@ -9,13 +9,13 @@
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=L9RVWU5NUZ4YG)   [donations are taken care by meeiot domain]
 
 
-Descripption under construction.
+Description: work in progress.
 
   * No ports open on router
   * Lag under 1/4 of a second
-  * Played with any browser (only a browser)
-  * md5 + simetric encryption before sending the stream. 
-  * Motion, Time lapse, Live video. (no audio) 
+  * Played with any browser
+  * md5 + symetric encryption
+  * Motion, Time lapse, Live Video. (no audio) 
     
     
 ### Brief
@@ -27,7 +27,7 @@ Descripption under construction.
 
 #### Prerequisites
     * qtcreator good to have
-    * makse server
+    * make server
     * make client
     
 ##### Start server
@@ -59,23 +59,7 @@ Descripption under construction.
  ![last_demo](https://raw.githubusercontent.com/comarius/pisica/master/pisicaweb/lastfix.png)
  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 https://youtu.be/Tq8YrUxraMg
 
-R-PI Preloaded SD Cards at https://www.redypis.org
 
 
