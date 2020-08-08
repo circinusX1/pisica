@@ -17,7 +17,7 @@ static std::string  _tok;// = argv[1];
 std::string         _mac;
 config       _cfg = {0,
                          "http://localhost:8888",
-                         "/dev/video2",
+                         "/dev/video0",
                          "",
                          1366,
                          768,
@@ -35,8 +35,8 @@ config       _cfg = {0,
                          4,
                          1,
                          {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                         0,
-                        0,
+                         1,
+                        1,
                         0
              };
 
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     // srv srcpass campass
     if(argc!=5)
     {
-        std::cout << argv[0] << " server server-password cam-password cam-token\n";
+        std::cout << argv[0] << "  server server-password cam-password cam-token\n";
         exit(1);
     }
 
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
         _mac = ::macaddr();
         _pm = &m;
         c.start_thread();
-
+        std::cout << "MAC: " << _mac << "\n";
         while(__alive)
         {
             now = gtc();

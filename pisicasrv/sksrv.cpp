@@ -46,7 +46,7 @@ bool sksrv::spin(const char* auth, int cport, int cliport, pfn_cb cb)
             _cam.destroy();
             return false;
         }
-        LI("listening port "<< cport);
+        LI("CAM listening port "<< cport);
     }
     if(_cli.create(cliport, SO_REUSEADDR, 0)>0)
     {
@@ -57,7 +57,7 @@ bool sksrv::spin(const char* auth, int cport, int cliport, pfn_cb cb)
             _cli.destroy();
             return false;
         }
-        LI("listening port "<< cliport);
+        LI("WEB listening port "<< cliport);
     }
     fd_set r;
     time_t tl,now = time(0);
@@ -225,7 +225,8 @@ bool    sksrv::_on_player(skbase& s, const urlreq& req)
             _authcli(s, cli->second, mac, urlargs);
             if(cli->second.aok==true &&
                     urlargs.size()>1 &&
-                    urlargs[1].find("image")!=std::string::npos)
+                    (urlargs[1].find("image")!=std::string::npos||
+                     urlargs[1].find("auth")!=std::string::npos))
             {
                 const skcam*  pcs = _p.has(mac);
                 if(pcs && !_p.has(s))
@@ -266,7 +267,17 @@ void sksrv::_authcli(skbase& s,
             {
                 std::string k = p.substr(0,ce);
                 std::string v = p.substr(ce+1);
-
+                if(k=="auth")
+                {
+                    if(cw.passw == v.substr(0,cw.passw.length()))
+                    {
+                        ::msleep(128);
+                        cw.aok = true;
+                        cw.config.client = 1;
+                        cw.tstamp = time(0);
+                        return;
+                    }
+                }
                 if(k=="image")
                 {
                     if(cw.passw == v)

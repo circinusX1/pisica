@@ -174,8 +174,6 @@ void skcam::_record(const uint8_t* pb, size_t l)
         ::fwrite((const uint8_t*)buffer,1,hl,pf);
         ::fwrite(pb, 1, l, pf);
         ::fwrite((const uint8_t*)JpegPart,1,strlen(JpegPart),pf);
-
-
         ::fclose(pf);
     }
 }

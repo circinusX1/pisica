@@ -1,0 +1,5 @@
+build-pisicasrv
+./build-pisicasrv
+*.o
+*.lib
+

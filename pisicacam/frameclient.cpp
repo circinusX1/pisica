@@ -29,7 +29,7 @@ frameclient::~frameclient()
 
 void frameclient::stop_thread()
 {
-    ::sleep(3);
+    ::sleep(1);
     OsThread::stop_thread();
 }
 
@@ -62,7 +62,7 @@ void frameclient::thread_main()
             }
             if(cli.is_really_connected())
             {
-                std::cout << "connected to: " <<  _url->host <<":" <<_url->port << "\n";
+                std::cout << "FRM connected to: " <<  _url->host <<":" <<_url->port << "\n";
             }
             else
             {
