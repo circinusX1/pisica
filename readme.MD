@@ -33,7 +33,7 @@ Description: work in progress.
 ##### Start server
 
 ```
-./pisiscasrv camera_port web_port server_password camera_password camera_token
+./pisiscasrv camera_port web_port server_password camera_password numeric_camera_token
 
 ```
 
