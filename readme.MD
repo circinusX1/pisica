@@ -32,7 +32,7 @@ Description: work in progress.
     
 ##### Start server
 
-```
+```bash
 ./pisiscasrv camera_port web_port server_password camera_password numeric_camera_token
 
 ```
@@ -40,7 +40,7 @@ Description: work in progress.
 ##### Start a camera
 
 
-```
+```bash
 ./pisiscacam server_url_or_ip:camera_port(same as above) server_password camera_password numeric_camera_token /dev/videoX
 # ? I dony know whhere I am using the password. Ill come back later with explanations, but for now only the token is used.
 
@@ -50,7 +50,7 @@ Description: work in progress.
 ###### Server prerequisites
     * A web server apache lightpd nginx
     * Access the web page pisica.php
-```
+```bash
  # use camera mac to get to the specific camera and the token to get authenticated by the camea stream
  http://yourserver_ip/pisica.php?srv=server_password&cam=numeric_camera_token&mac=00006B8B4567&port=web_port
  # where mac is printed when you run 'pisiscacam'
