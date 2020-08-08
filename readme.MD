@@ -42,6 +42,7 @@ Description: work in progress.
 
 ```
 ./pisiscacam server_url_or_ip:camera_port(same as above) server_password camera_password numeric_camera_token /dev/videoX
+# ? I dony know whhere I am using the password. Ill come back later with explanations, but for now only the token is used.
 
 ```
 
@@ -50,6 +51,7 @@ Description: work in progress.
     * A web server apache lightpd nginx
     * Access the web page pisica.php
 ```
+ # use camera mac to get to the specific camera and the token to get authenticated by the camea stream
  http://yourserver_ip/pisica.php?srv=server_password&cam=numeric_camera_token&mac=00006B8B4567&port=web_port
  # where mac is printed when you run 'pisiscacam'
 ```
