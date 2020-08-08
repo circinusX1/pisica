@@ -17,7 +17,8 @@ Description: work in progress.
   * md5 + symetric encryption
       * Streaming (working)
       * Motion Detection (to be debunked, this is 15 months old project)
-      * Time Lapse (likewise)
+      * Time Lapse (likewise, 15 months old project and I have not commented the code)
+      * Recording (likewise,  ... and I have not commented the damn code)
     
     
 ### Brief
