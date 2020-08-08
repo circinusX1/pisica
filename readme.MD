@@ -19,9 +19,40 @@ Descripption under construction.
    * start server
    * open the browser to pisica.php
      
-#work in progress...
+### Updates 8 AUg 2020
+
+#### Prerequisites
+    * qtcreator good to have
+    * makse server
+    * make client
+    
+##### Start server
+
+```
+./pisiscasrv camera_port web_port server_password camera_password camera_token
+
+```
+
+##### Start a camera
 
 
+```
+./pisiscacam server_url_or_ip:camera_port(same as above) server_password camera_password numeric_camera_token /dev/videoX
+
+```
+
+##### Copy the demo pisica.php to the server.
+###### Server prerequisites
+    * A web server apache lightpd nginx
+    * Access the web page pisica.php
+```
+ http://yourserver_ip/pisica.php?srv=server_password&cam=numeric_camera_token&mac=00006B8B4567&port=web_port
+ # where mac is printed when you run 'pisiscacam'
+```
+
+#####  Demo image Aug 8 2020
+ 
+ ![last_demo](https://raw.githubusercontent.com/comarius/pisica/master/pisicaweb/lastfix.png)
  
 
 
