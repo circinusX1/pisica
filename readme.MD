@@ -19,7 +19,7 @@ Descripption under construction.
    * start server
    * open the browser to pisica.php
      
-### Updates 8 AUg 2020
+### Updates 8 Aug 2020
 
 #### Prerequisites
     * qtcreator good to have
