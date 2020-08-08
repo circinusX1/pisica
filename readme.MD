@@ -2,6 +2,10 @@
 ### A light version of liveimage project with cloud support.
 
 
+ ![last_demo](https://github.com/comarius/pisica/blob/master/pisicaweb/pisicacon.png)
+
+
+
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=L9RVWU5NUZ4YG)   [donations are taken care by meeiot domain]
 
 
