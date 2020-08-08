@@ -15,7 +15,9 @@ Description: work in progress.
   * Lag under 1/4 of a second
   * Played with any browser
   * md5 + symetric encryption
-  * Motion, Time lapse, Live Video. (no audio) 
+      * Streaming (working)
+      * Motion Detection (to be debunked, this is 15 months old project)
+      * Time Lapse (likewise)
     
     
 ### Brief
