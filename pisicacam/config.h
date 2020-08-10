@@ -49,4 +49,5 @@ inline time_t gtc(void)
     return time_t(now.tv_sec * 1000.0 + now.tv_nsec / 1000000.0);
 }
 
+
 #endif // CONFIG_H

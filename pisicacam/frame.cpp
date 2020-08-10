@@ -1,4 +1,5 @@
 
+#include <iostream>
 #include <string.h>
 #include <assert.h>
 #include "frame.h"
@@ -19,6 +20,7 @@ bool  frame::add(const uint8_t* buff,
         _accum+=bytes;
         return true;
     }
+    std::cout<<"cannot add frame " << bytes << " > " << room() << "\n";
     return false;
 }
 

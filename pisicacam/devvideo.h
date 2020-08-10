@@ -46,7 +46,7 @@
 #include "mmotion.h"
 #include "osthread.h"
 #include "../common/config.h"
-#include "cimg.h"
+//#include "cimg.h"
 
 #define MAX_BUFFERS 4
 
