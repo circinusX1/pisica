@@ -87,7 +87,7 @@ void frameclient::thread_main()
             if(cli.sendall(sr.c_str(),sr.length()) != (int)sr.length())
             {
                 cli.destroy();
-                std::cout << "send all authorizarion failed \n";
+                std::cout << "SEND ALL AUTHORIZARION FAILED \n";
                 goto FLUSH;
             }
 
@@ -99,7 +99,7 @@ void frameclient::thread_main()
             {
                 char token[128];
 
-                std::cout << ">" << incoming << "\n";
+                std::cout << ">TOKEN:" << incoming << "\n";
                 incoming[bytes] = 0;
                 std::string inc = (char*)incoming;
                 if(tokenex == inc)
@@ -107,14 +107,14 @@ void frameclient::thread_main()
                     if(cli.sendall((const unsigned char*)&_cfg, sizeof(_cfg)) != sizeof(_cfg))
                     {
                         cli.destroy();
-                        std::cout << "send all confirmation failed \n";
+                        std::cout << "SEND ALL CONFIRMATION FAILED \n";
                         goto FLUSH;
                     }
                     _stream(cli);
                 }
                 else
                 {
-                    std::cout << "password confirmation failed \n";
+                    std::cout << "PASSWORD CONFIRMATION FAILED \n";
                     cli.destroy();
                 }
             }
@@ -142,6 +142,7 @@ void frameclient::_stream(tcp_cli_sock& cli)
 
     ::msleep(258);
 
+    std::cout << "STREAM WHILE \n";
     while(cli.is_really_connected())
     {
         FD_ZERO(&rset);
@@ -161,13 +162,13 @@ void frameclient::_stream(tcp_cli_sock& cli)
                 if(bytes==0)
                 {
                     cli.destroy();
-                    std::cout << "remote closed connection\n";
+                    std::cout << "REMOTE CLOSED CONNECTION\n";
                     break;
                 }
                 if(_fconf.motion+_fconf.lapse+_fconf.client==0)
                 {
                     cli.destroy();
-                    std::cout << "remote does not want streaming\n";
+                    std::cout << "REMOTE DOES NOT WANT STREAMING\n";
                     break;
                 }
             }
@@ -187,21 +188,24 @@ void frameclient::_stream(tcp_cli_sock& cli)
             _lastfrmtime=time(0);
             if(_lastfrmtime>(_now+5))
             {
-                std::cout << "Pushes:" << _bps/5 << "\n";
+                std::cout << "PUSHES:" << _bps/5 << "\n";
                 _bps=0;
                 _now=_lastfrmtime;
             }
             delete pf; pf=nullptr;
             _noframe = 0;
         }
-        else {
-            if(++_noframe > 100)
+        else
+        {
+            if(++_noframe > 300)
             {
-                std::cout << "no streaming. closing connection\n";
+                std::cout << "NO FRAMES STREAMING. CLOSING CONNECTION\n";
                 cli.destroy();
+                _noframe = 0;
             }
         }
     }
 }
+
 
 

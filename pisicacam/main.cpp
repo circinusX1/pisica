@@ -19,9 +19,9 @@ config       _cfg = {0,
                          "http://localhost:8888",
                          "/dev/video0",
                          "",
-                         1366,
-                         768,
-                         1500,
+                         640,
+                         480,
+                         30,
                          50,
                          800,
                          100,
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     devvideo* pdv = new devvideo(&_cfg);
     if(pdv->open())
     {
-        config          cfg;
+        config          cfg = {0};
         int             moinertia=0;
         uint32_t        jpgsz = 0;
         uint8_t*        pjpg = 0;
@@ -106,7 +106,6 @@ int main(int argc, char *argv[])
         _pp = argv[3];
         _tok = argv[4];
         ::strcpy(_cfg.authplay,xencrypt(_tok,_pp).c_str());
-        _cfg = _cfg;
         _mac = ::macaddr();
         _pm = &m;
         c.start_thread();
@@ -118,8 +117,8 @@ int main(int argc, char *argv[])
                 AutoLock a(_pm);
                 if(_dconf)
                 {
-                    cfg = _cfg;
-                    _dconf=false;
+                    ::memcpy(&cfg, &_cfg, sizeof(cfg));
+                    _dconf = false;
                 }
             }while(0);
             if(cfg.dirty)
@@ -139,6 +138,7 @@ int main(int argc, char *argv[])
             const uint8_t*  pb422 = pdv->read(w, h, sz, err);
             if(pb422)
             {
+		std::cout << "got:" << w << "x" << h << ":" << sz << "\n";
                 jpgsz=ffmt->convert420(pb422, w, h, sz, cfg.quality, &pjpg);
                 //
                 // motion
@@ -189,6 +189,7 @@ int main(int argc, char *argv[])
                         pf->add((uint8_t*)&jpgsz, sizeof(jpgsz), 0); // 4 bytes length of the frame
                         if(pf->add(pjpg, jpgsz, 0))
                         {
+                            //std::cout << "enquing frame " << jpgsz << "\n";
                             q.enque(pf);
                         }
                         else
@@ -197,8 +198,15 @@ int main(int argc, char *argv[])
                             exit(2);
                         }
                     }
+		    else
+	 	    {
+			std::cout << "new frame failed\n";
+                    }
                 }
-            }
+            }else
+            {
+	       std::cout << "getting 422 failed\n";
+	    }
             bstream = false;
             ticksave = now;
             ::msleep(50);
@@ -214,7 +222,7 @@ int main(int argc, char *argv[])
 void setts(config* pc)
 {
     AutoLock a(_pm);
-   _cfg = *pc;
+   ::memcpy(&_cfg,pc,sizeof(_cfg));
     ::strcpy(_cfg.authplay,xencrypt(_tok,_pp).c_str());
    _dconf=true;
 }

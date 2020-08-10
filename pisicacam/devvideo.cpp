@@ -8,7 +8,7 @@
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+-    GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/
@@ -31,7 +31,7 @@
 devvideo::devvideo(const config* pcfg)
 {
     //const char* device, int x, int y, int fps, int motionlow, int motionhi, int nr)
-
+    std::cout << "USING  DEVICE " << pcfg->device << "\n";
     _sdevice = pcfg->device;
     _curbuffer = 0;
     _xy[0]=pcfg->w;
@@ -57,14 +57,18 @@ devvideo::~devvideo()
 
 bool devvideo::open()
 {
+    std::cout << "open device \n";
+
     size_t diez = _sdevice.find('*');
     if(diez != std::string::npos)
     {
         std::string sdev = _sdevice.substr(0,diez);
-        for(int i=0; i < 8; i++)
+        for(int i=0; i < 16; i++)
         {
             std::string check = sdev + std::to_string(i);
+
             std::cout << "opening: " << check << "\n";
+
             if (::access(check.c_str(),0)!=0)
             {
                 std::cout << "No Device:  "<< check << ", " <<  strerror(errno)  << "\n";
@@ -350,16 +354,18 @@ const uint8_t* devvideo::read(int& w, int& h, size_t& sz, bool& fatal)
     FD_ZERO(&fds);
     FD_SET(_device, &fds);
     tv.tv_sec = 0;
-    tv.tv_usec = 10000;
+    tv.tv_usec = 32000;
     int r = select(_device + 1, &fds, NULL, NULL, &tv);
     if(r==-1)
     {
         fatal=true;
         _fatal=true;
+	std::cerr << "fatal seelect() fd=" << _device << "\n";
         return 0; // fatal
     }
     if(r == 0 || !FD_ISSET(_device, &fds))
     {
+        std::cout << " fdset = 0 \n";
         return 0;
     }
 
@@ -396,6 +402,7 @@ const uint8_t* devvideo::read(int& w, int& h, size_t& sz, bool& fatal)
 
     if (-1 == _ioctl(VIDIOC_QBUF, &buf))
     {
+	std::cerr << "ioctl failed \n";
         sz = 0;
         return 0;
     }

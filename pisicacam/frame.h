@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <vector>
 
-#define MAX_BUFF   (1024*256)
+#define MAX_BUFF   (1024*480)
 #define MAX_FRAMES 8
 
 class streamq;
@@ -39,7 +39,7 @@ private:
         _buff = new uint8_t[MAX_BUFF+1];
         if(_buff==0)
         {
-            printf("cannot aloocate heap \r\n");
+            printf("cannot allocate heap \r\n");
             exit(0);
         }
     }

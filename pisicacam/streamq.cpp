@@ -4,7 +4,7 @@
 #include "streamq.h"
 
 
-#define std::cout  nullout
+#define nullout std::cout
 
 
 streamq::~streamq()
