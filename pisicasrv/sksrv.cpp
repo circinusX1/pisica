@@ -248,18 +248,17 @@ bool    sksrv::_on_player(skbase& s, const urlreq& req)
                 {
                     std::string mac = urlargs[0].substr(1);
                     std::string reply;
-                    reply += "<input type='text' id='t_";
-                    reply += cli->first;
-                    reply += "'></input>";
-                    reply += "<button class='stream' href='http://";
+                    reply += "<a href='http://";
                     reply += _srvurl + "/";
                     reply += mac;
-                    reply+= "' id='";
-                    reply += cli->first;
+                    reply += "?server=";
+                    reply += Srvpas;
+                    reply += "&camera=";
+                    reply += Campas;    // make this coming from camera
                     reply += "'>";
-                    reply += "stream:";
+                    reply += "this link is a hack to the stream ";
                     reply += cli->first;
-                    reply += "</button>";
+                    reply += "</a>";
 
                     reply += "<li>width: ";reply += std::to_string(cli->second.config.w);
                     reply += "<li>height: ";reply += std::to_string(cli->second.config.h);
@@ -273,6 +272,7 @@ bool    sksrv::_on_player(skbase& s, const urlreq& req)
                     reply += "<li>ml: ";reply += std::to_string(cli->second.config.motionl);
                     reply += "<li>mw: ";reply += std::to_string(cli->second.config.motionw);
                     reply += "<li>mh: ";reply += std::to_string(cli->second.config.motionh);
+
                     int len = ::sprintf(hdr,HDR,reply.c_str(),"");
                     s.send(hdr, len);
                     s.send(reply.c_str(), reply.length());
@@ -282,13 +282,15 @@ bool    sksrv::_on_player(skbase& s, const urlreq& req)
         else {
             std::string mac = urlargs[0].substr(1);
             std::map<std::string, ClisWait>::iterator cli = _cliswait.find(mac);
+
             if(cli != _cliswait.end()) // no camera was here yet
             {
                 _authcli(s, cli->second, mac, urlargs);
                 if(cli->second.aok==true &&
                         urlargs.size()>1 &&
                         (urlargs[1].find("image")!=std::string::npos||
-                         urlargs[1].find("auth")!=std::string::npos))
+                         urlargs[1].find("auth")!=std::string::npos ||
+                         urlargs[1].find("camera")!=std::string::npos))
                 {
                     const skcam*  pcs = _p.has(mac);
                     if(pcs && !_p.has(s))
@@ -321,6 +323,7 @@ void sksrv::_authcli(skbase& s,
     // send challange token and wait the md5
     if(args.size()>1)
     {
+        int                      passcckeck=2;
         std::vector<std::string> params;
         ::split(args[1],'&',params);
         for(const auto& p : params)
@@ -330,6 +333,25 @@ void sksrv::_authcli(skbase& s,
             {
                 std::string k = p.substr(0,ce);
                 std::string v = p.substr(ce+1);
+#if 1 // HACKING LOGIN
+                if(k=="server")
+                {
+                    passcckeck -= v==Srvpas ? 1 : 0;
+                }
+                if(k=="token" || k=="camera")
+                {
+                    passcckeck -= v==Campas ? 1 : 0;
+                }
+#endif
+                if(passcckeck == 0)
+                {
+                    cw.aok = true;
+                    cw.config.client = 1;
+                    cw.tstamp = time(0);
+                    return;
+
+                }
+
                 if(k=="auth")
                 {
                     if(cw.passw == v.substr(0,cw.passw.length()))

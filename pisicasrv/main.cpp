@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 
 
     Srvpas = argv[3];
-    Campas = argv[4];
+    Campas = argv[4];  // make this coming from camera
     Camtok = argv[5];
     LI(strweb_time());
     Sigs();

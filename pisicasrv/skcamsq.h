@@ -16,7 +16,7 @@ public:
 
 private:
     deque<skbase*>   _q;
-    umutex      _m;
+    umutex          _m;
 };
 
 #endif // SKQ_H

@@ -38,7 +38,7 @@ DISTNAME      = pisicacam1.0.0
 DISTDIR = /sdaone/CPP/pisica/pisicacam/.tmp/pisicacam1.0.0
 LINK          = g++
 LFLAGS        = 
-LIBS          = $(SUBLIBS) -lcurl -lpng -ljpeg -lv4l2 -lQt5Core -lpthread 
+LIBS          = $(SUBLIBS) -ljpeg -lv4l2 -lQt5Core -lpthread 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -404,8 +404,7 @@ config.o: config.cpp ../common/config.h
 devvideo.o: devvideo.cpp devvideo.h \
 		mmotion.h \
 		osthread.h \
-		../common/config.h \
-		cimg.h
+		../common/config.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o devvideo.o devvideo.cpp
 
 frame.o: frame.cpp frame.h \
@@ -442,7 +441,6 @@ main.o: main.cpp main.h \
 		singleton.h \
 		devvideo.h \
 		mmotion.h \
-		cimg.h \
 		ffmt.h \
 		jpeger.h \
 		vigenere.h

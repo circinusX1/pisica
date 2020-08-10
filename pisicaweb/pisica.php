@@ -17,7 +17,7 @@ Usage: srv=localhost&cam=token&mac=macaddr&port=5555
         $sig = md5($token.$_GET['cam']."-".$_GET['srv']);
         echo "GOT: {$token}{$MAC}?auth={$sig}<br>";
         echo "getting <img width='640px' src='http://{$thisip}:{$PORT}/{$MAC}?auth={$sig}<br>";
-        echo "<img width='400px' src='http://{$thisip}:{$PORT}/{$MAC}?auth={$sig}' />";
+        echo "<img width='640' heigth='480' src='http://{$thisip}:{$PORT}/{$MAC}?auth={$sig}' />";
         //echo "<img width='640px' src='http://{$thisip}:{$PORT}/?mac={$MAC}&auth={$sig}' />";
         //echo "<img width='640px' src='http://{$thisip}:{$PORT}/{$MAC}?auth={$sig}' />";
     }

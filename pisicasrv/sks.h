@@ -47,7 +47,8 @@ private:
 private:
     typedef std::map<std::string,camclis*>::iterator coniterator;
     typedef std::map<std::string,camclis*>::const_iterator kconiterator;
-    skcamsq&                        _q;
+
+    skcamsq&                        _q;      // incomming connections que
     std::map<std::string,camclis*>  _pool;
     umutex                          _m;
     sksrv*                          _srv = nullptr;
