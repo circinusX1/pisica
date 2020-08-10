@@ -12,7 +12,7 @@
 #include "vigenere.h"
 #include "md5.h"
 
-#define TTL_CLI 30
+#define TTL_CLI 130
 
 static char HDR[] = "HTTP/1.0 200 OK\r\n"
                     "Connection: close\r\n"
@@ -156,7 +156,7 @@ bool    sksrv::_on_cam()
                         if(_regcamera(mac, c))
                         {
                             //s.sendall((uint8_t*)&c,sizeof(c));
-                            skbase* pcam = new skcam(s,c);
+                            skbase* pcam = new skcam(s,c,this);
                             pcam->name(mac);
                             _q.push(pcam);
                         }
@@ -189,7 +189,7 @@ bool    sksrv::_on_cli()
             return false;
         }
         enough[bytes]=0;
-        LI("CONNECCTION ");
+        LI("NEW CONNECTION ");
         LD(">:" << enough );
         const char* end = ::strstr(enough,"\r\n\r\n");
         if(end==nullptr)end=(enough + bytes);
@@ -197,10 +197,17 @@ bool    sksrv::_on_cli()
 
         if(req.method=="GET") //is a web
         {
+            for(const auto& it: req.headers)
+            {
+                if(it.name=="Host")
+                {
+                    _srvurl=it.value;
+                }
+            }
             return _on_player(s,req);
         }
     }
-    LI("CONNECCTION GONE");
+    LI("CONNECTION GONE");
     s.destroy();
     return false;
 }
@@ -217,25 +224,81 @@ bool    sksrv::_on_player(skbase& s, const urlreq& req)
     LI( req.uri );
     if(urlargs.size())
     {
-
-        std::string mac = urlargs[0].substr(1);
-        std::map<std::string, ClisWait>::iterator cli = _cliswait.find(mac);
-        if(cli != _cliswait.end()) // no camera was here yet
+        if(urlargs.size()==1)
         {
-            _authcli(s, cli->second, mac, urlargs);
-            if(cli->second.aok==true &&
-                    urlargs.size()>1 &&
-                    (urlargs[1].find("image")!=std::string::npos||
-                     urlargs[1].find("auth")!=std::string::npos))
+            char hdr[sizeof(HDR)+120];
+            if(urlargs[0]=="/")
             {
-                const skcam*  pcs = _p.has(mac);
-                if(pcs && !_p.has(s))
+                std::string reply = "cameras<br>";
+                for (const auto& a: _cliswait)
                 {
-                    LI("new pol ");
-                    skimg* pweb = new skimg(s);
-                    pweb->name(mac);
-                    _q.push(pweb);
-                    return true;
+                    reply += "<li>camera: <a href='http://";
+                    reply += _srvurl + "/";
+                    reply += a.first + "'>";
+                    reply += a.first +"</a></li>";
+                }
+                int len = ::sprintf(hdr,HDR,reply.c_str(),"");
+                s.send(hdr, len);
+                s.send(reply.c_str(), reply.length());
+            }
+            else{
+                std::string mac = urlargs[0].substr(1);
+                std::map<std::string, ClisWait>::iterator cli = _cliswait.find(mac);
+                if(cli != _cliswait.end()) // no camera was here yet
+                {
+                    std::string mac = urlargs[0].substr(1);
+                    std::string reply;
+                    reply += "<input type='text' id='t_";
+                    reply += cli->first;
+                    reply += "'></input>";
+                    reply += "<button class='stream' href='http://";
+                    reply += _srvurl + "/";
+                    reply += mac;
+                    reply+= "' id='";
+                    reply += cli->first;
+                    reply += "'>";
+                    reply += "stream:";
+                    reply += cli->first;
+                    reply += "</button>";
+
+                    reply += "<li>width: ";reply += std::to_string(cli->second.config.w);
+                    reply += "<li>height: ";reply += std::to_string(cli->second.config.h);
+                    reply += "<li>fps: ";reply += std::to_string(cli->second.config.fps);
+                    reply += "<li>lapse: ";reply += std::to_string(cli->second.config.lapse);
+                    reply += "<li>motion: ";reply += std::to_string(cli->second.config.motion);
+                    reply += "<li>stram: ";reply += std::to_string(cli->second.config.streame);
+                    reply += "<li>dev: ";reply += cli->second.config.device;
+                    reply += "<li>tlapse: ";reply += std::to_string(cli->second.config.timelapse);
+                    reply += "<li>mdiff: ";reply += std::to_string(cli->second.config.motiondiff);
+                    reply += "<li>ml: ";reply += std::to_string(cli->second.config.motionl);
+                    reply += "<li>mw: ";reply += std::to_string(cli->second.config.motionw);
+                    reply += "<li>mh: ";reply += std::to_string(cli->second.config.motionh);
+                    int len = ::sprintf(hdr,HDR,reply.c_str(),"");
+                    s.send(hdr, len);
+                    s.send(reply.c_str(), reply.length());
+                }
+            }
+        }
+        else {
+            std::string mac = urlargs[0].substr(1);
+            std::map<std::string, ClisWait>::iterator cli = _cliswait.find(mac);
+            if(cli != _cliswait.end()) // no camera was here yet
+            {
+                _authcli(s, cli->second, mac, urlargs);
+                if(cli->second.aok==true &&
+                        urlargs.size()>1 &&
+                        (urlargs[1].find("image")!=std::string::npos||
+                         urlargs[1].find("auth")!=std::string::npos))
+                {
+                    const skcam*  pcs = _p.has(mac);
+                    if(pcs && !_p.has(s))
+                    {
+                        LI("new pol ");
+                        skimg* pweb = new skimg(s);
+                        pweb->name(mac);
+                        _q.push(pweb);
+                        return true;
+                    }
                 }
             }
         }

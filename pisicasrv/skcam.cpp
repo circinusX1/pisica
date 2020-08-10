@@ -4,11 +4,13 @@
 #include "main.h"
 #include "skcam.h"
 #include "skweb.h"
+#include "sksrv.h"
 #include "../common/config.h"
 
 static char JpegHdr[]="Content-Type: image/jpeg\r\n"
                       "Content-Length: %d\r\n"
                       "X-Timestamp: %d.%d\r\n\r\n";
+
 static char JpegPart[] = "\r\n--MariusMariusMarius\r\nContent-type: image/jpeg\r\n";
 static char JpegPartHeader[] = "HTTP/1.0 200 OK\r\n"
                                "Connection: close\r\n"
@@ -18,8 +20,9 @@ static char JpegPartHeader[] = "HTTP/1.0 200 OK\r\n"
                                "\r\n"
                                "--MariusMariusMarius\r\n";
 
-skcam::skcam(skbase& o, const config& c):skbase(o,skbase::CAM),
-    _vf(vf::STACK)
+skcam::skcam(skbase& o,
+             const config& c,
+             sksrv* psrv):skbase(o,skbase::CAM),_vf(vf::STACK),_psrv(psrv)
 {
 
     bind(nullptr,false);
@@ -122,6 +125,7 @@ int skcam::_shoot(const vf& vf)
         _now=now;
         LI("Got: " << _bps/5 << " bps");
         _bps=0;
+        _psrv->keepcam(_name);
     }
     if(_pclis.size())
     {
@@ -163,6 +167,10 @@ void skcam::_record(const uint8_t* pb, size_t l)
         gettimeofday(&timestamp, &tz);
 
         if(nf){
+            std::string htf = "/tmp/"; htf+=name(); htf+=".html";
+            FILE* pf2 = ::fopen(htf.c_str(),"wb");
+            ::fprintf(pf2,"<img src='%s'>",fn.c_str());
+            ::fclose(pf2);
             ::fwrite((const uint8_t*)JpegPartHeader,1, strlen(JpegPartHeader), pf);
         }
 

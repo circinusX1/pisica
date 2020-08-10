@@ -20,7 +20,6 @@ struct ClisWait{
     std::string         passw;
 };
 
-
 class sksrv
 {
 public:
@@ -50,6 +49,7 @@ private:
     tcp_srv_sock    _cam;
     tcp_srv_sock    _cli;
     std::string     _srvauth;
+    std::string     _srvurl;
     std::map<std::string, ClisWait> _cliswait;
 
 };

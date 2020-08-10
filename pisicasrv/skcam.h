@@ -24,10 +24,11 @@
 
 class skcam;
 class skweb;
+class sksrv;
 class skcam : public skbase
 {
 public:
-    skcam(skbase&, const config&);
+    skcam(skbase&, const config&, sksrv* psrv);
     virtual ~skcam();
     virtual void bind(skweb* b, bool addklie);
     virtual int ioio(const std::vector<skbase*>& clis);
@@ -49,6 +50,7 @@ private:
     umutex              _m;
     config              _c;
     bool                _dconf=false;
+    sksrv*              _psrv=nullptr;
 };
 
 #endif // SKCAM_H
