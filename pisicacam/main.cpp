@@ -138,7 +138,8 @@ int main(int argc, char *argv[])
             const uint8_t*  pb422 = pdv->read(w, h, sz, err);
             if(pb422)
             {
-		std::cout << "got:" << w << "x" << h << ":" << sz << "\n";
+		        //std::cout << "got:" << w << "x" << h << ":" << sz << 
+"\n";
                 jpgsz=ffmt->convert420(pb422, w, h, sz, cfg.quality, &pjpg);
                 //
                 // motion
