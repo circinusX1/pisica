@@ -40,19 +40,26 @@ Description: work in progress.
 
 
 ##### Start a camera
+###### ./pisicacam SERVER_IP:CAM_PORT somepassword camerapas /dev/yourcam_device
+
 ![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi4.png)
 
 
 ##### Open the browsers  http://SERVEIP:SRV_PORT
+###### navigate
 
 ![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi6.png)
+
+The link has the password inthe query for demo purposes
+
 ![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi7.png)
 
+##### 'Utub
 
 https://www.youtube.com/watch?v=tHoIRJGTjPk
 
 
-###  You can check my reverse ssh online service and online key value database at 
+###  Other cool projects
 
 [reverse ssh as a service](http://www.mylinuz.com)
 
