@@ -1,3 +1,3 @@
 #!/bin/bash
-g++ -I../common -I./ -lpthread  -ljpeg -lv4l2 *.cpp -o pisicacam
+g++ -Wall -std=c++11 -I../common -I./ *.cpp ../common/*.cpp -ljpeg -lv4l2  -lpthread -o pisicacam
 
