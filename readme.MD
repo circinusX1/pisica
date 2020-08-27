@@ -47,7 +47,7 @@ Description: work in progress.
 ![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi6.png)
 ![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi7.png)
 
-##### Open the browsers
+##### Open the browsers  http://SERVEIP:SRV_PORT
 
 ![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi8.png)
 ![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi1.png)
