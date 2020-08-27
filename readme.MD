@@ -1,5 +1,4 @@
-### Linux camera, Web Cam Streaming Sharing Server
-#### 
+### Linux camera, Webcam sharing streaming server relay. Multiple cameras, multiple views.
 
 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=L9RVWU5NUZ4YG)   [donations are taken care by meeiot domain]
