@@ -2,10 +2,6 @@
 #### 
 
 
- ![last_demo](https://github.com/comarius/pisica/blob/master/pisicaweb/pisicacon.png)
-
-
-
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=L9RVWU5NUZ4YG)   [donations are taken care by meeiot domain]
 
 
@@ -41,21 +37,17 @@ Description: work in progress.
     
 ##### Start server
 ![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi2.png)
-![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi4.png)
+
 
 ##### Start a camera
-![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi6.png)
-![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi7.png)
+![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi4.png)
+
 
 ##### Open the browsers  http://SERVEIP:SRV_PORT
 
-![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi8.png)
-![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi1.png)
+![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi6.png)
+![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi7.png)
 
-#####  Demo image Aug 8 2020
- 
- ![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/pisicaweb/lastfix.png)
- 
 
 https://www.youtube.com/watch?v=tHoIRJGTjPk
 
