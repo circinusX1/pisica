@@ -36,17 +36,24 @@ Description: work in progress.
     
     
 ##### Start server
+######  ./pisicasrv CAM_PORT WEB_PORT some_server_password
+
 ![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi2.png)
 
 
-##### Start a camera
-###### ./pisicacam SERVER_IP:CAM_PORT somepassword camerapas /dev/yourcam_device
+##### Start the camera client locally on a PC with a webcam or a raspberry PI
+###### ./pisicacam SERVER_IP:CAM_PORT server_password camera_password /dev/yourcam_device
 
 ![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi4.png)
 
 
 ##### Open the browsers  http://SERVEIP:SRV_PORT
 ###### navigate
+  * On local http there can be links to pisicasrv ports and provide the link as:
+  * http://localhost:SERVER_PORT/CAMERA_MAC?server=server_password&camera=camera_password&image=1
+      * where CAMERA_MAC is the camera token printed when you start the camera
+      * server_password is the server password you provided as a command line parameter when you started the pisecasrv
+      * camera_password is the password you provided when you started the camera
 
 ![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi6.png)
 
