@@ -60,9 +60,8 @@ The link has the password inthe query for demo purposes
 
 ![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi7.png)
 
-##### 'Utub
+##### VIdeo Youtube
 
-[youtube video](https://www.youtube.com/watch?v=rDwoClB92no)
 [![YOUTUBE](https://img.youtube.com/vi/watch?v=rDwoClB92no/0.jpg)](https://img.youtube.com/vi/watch?v=rDwoClB92no/0.jpg)
 
 ###  Other cool projects
