@@ -62,7 +62,7 @@ The link has the password inthe query for demo purposes
 
 ##### VIdeo Youtube
 
-[![YOUTUBE](https://img.youtube.com/vi/watch?v=rDwoClB92no/0.jpg)](https://img.youtube.com/watch?v=rDwoClB92no)
+[![YOUTUBE](https://img.youtube.com/vi/watch?v=rDwoClB92no/0.jpg)](https://youtube.com/watch?v=rDwoClB92no)
 
 ###  Other cool projects
 
