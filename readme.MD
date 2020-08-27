@@ -1,5 +1,5 @@
-### R-PI Linux Camera, Web Cam Streaming, Time lapse, Motion
-### A light version of liveimage project with cloud support.
+### Linux camera, Web Cam Streaming Sharing Server
+#### 
 
 
  ![last_demo](https://github.com/comarius/pisica/blob/master/pisicaweb/pisicacon.png)
@@ -14,7 +14,7 @@ Description: work in progress.
   * No ports open on router
   * Lag under 1/4 of a second
   * Played with any browser
-  * md5 + symetric encryption
+  * symetric encryption
       * Streaming (working)
       * Motion Detection (to be debunked, this is 15 months old project)
       * Time Lapse (likewise, 15 months old project and I have not commented the code)
@@ -22,46 +22,39 @@ Description: work in progress.
     
     
 ### Brief
+   * compile both projects. There is a compile.sh script in pisicasrv. Adapt it for pisicam too.
    * start client
    * start server
-   * open the browser to pisica.php
+   * open the browser to server:port
      
 ### Updates 8 Aug 2020
 
 #### Prerequisites
     * qtcreator good to have
-    * make server
-    * make client
+    * get a server on the net. Eg contabo.net
+![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi0.png)
+    * clone the git and build the server
+![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi1.png)
+
+    * make client on the pc
+    
     
 ##### Start server
-
-```bash
-./pisiscasrv camera_port web_port server_password camera_password numeric_camera_token
-
-```
+![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi2.png)
+![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi4.png)
 
 ##### Start a camera
+![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi6.png)
+![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi7.png)
 
+##### Open the browsers
 
-```bash
-./pisiscacam server_url_or_ip:camera_port(same as above) server_password camera_password numeric_camera_token /dev/videoX
-# ? I dony know whhere I am using the password. Ill come back later with explanations, but for now only the token is used.
-
-```
-
-##### Copy the demo pisica.php to the server.
-###### Server prerequisites
-    * A web server apache lightpd nginx
-    * Access the web page pisica.php
-```bash
- # use camera mac to get to the specific camera and the token to get authenticated by the camea stream
- http://yourserver_ip/pisica.php?srv=server_password&cam=numeric_camera_token&mac=00006B8B4567&port=web_port
- # where mac is printed when you run 'pisiscacam'
-```
+![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi8.png)
+![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/docs/pisi1.png)
 
 #####  Demo image Aug 8 2020
  
- ![last_demo](https://raw.githubusercontent.com/comarius/pisica/master/pisicaweb/lastfix.png)
+ ![last_demo](https://raw.githubusercontent.com/circinusX1/pisica/master/pisicaweb/lastfix.png)
  
 
 https://www.youtube.com/watch?v=tHoIRJGTjPk
@@ -72,6 +65,4 @@ https://www.youtube.com/watch?v=tHoIRJGTjPk
 [reverse ssh as a service](http://www.mylinuz.com)
 
 [key value database as a service](https://www.meeiot.org)
-
-
 
