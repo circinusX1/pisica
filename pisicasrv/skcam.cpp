@@ -51,7 +51,6 @@ void skcam::bind(skweb* pcs, bool addklie)
         {
             AutoLock a(&_m);
             _pclis.insert(pcs);
-            _dconf=true;
         }
     }
     else
@@ -66,11 +65,6 @@ void skcam::bind(skweb* pcs, bool addklie)
             {
                 _pclis.erase(pcs);
             }
-        }
-        if(_pclis.size()==0)
-        {
-            AutoLock a(&_m);
-            _dconf = true;
         }
     }
 }
@@ -89,10 +83,10 @@ int skcam::ioio(const std::vector<skbase*>& clis)
             {
                 do{
                     AutoLock a(&_m);
-                    if(_dconf)
+                    if(_c.dirty)
                     {
                         this->snd((const unsigned char*)&_c, sizeof(_c));
-                        _dconf=false;
+                        _c.dirty=false;
                     }
                 }while(0);
 
@@ -150,7 +144,7 @@ void    skcam::configit(const config& c)
 {
     AutoLock a(&_m);
     _c = c;
-    _dconf = true;
+    _c.dirty = true;
 }
 
 void skcam::_record(const uint8_t* pb, size_t l)

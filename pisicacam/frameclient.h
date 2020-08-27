@@ -6,7 +6,7 @@
 #include "sock.h"
 #include "streamq.h"
 #include "urlinfo.h"
-#include "../common/config.h"
+#include "config.h"
 #include <iostream>
 #include <curl/curl.h>
 
@@ -36,6 +36,7 @@ private:
     time_t         _lastfrmtime;
     int            _noframe=0;
     config         _fconf;
+    bool           _allowed=false;
 };
 
 #endif // PUSHER_H

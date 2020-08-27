@@ -1,5 +1,5 @@
 
-#include "../common/config.h"
+#include "config.h"
 #include "mmotion.h"
 
 mmotion::mmotion(int w, int h, int nr):_w(w),_h(h),_nr(nr)
@@ -41,7 +41,7 @@ int mmotion::has_moved(uint8_t* fmt420)
     uint8_t*          pSeen = _motionbufs[2];
     uint8_t*          prowprev = _motionbufs[_motionindex ? 0 : 1];
     uint8_t*          prowcur = _motionbufs[_motionindex ? 1 : 0];
-    int               pixels = 0;
+    int               pixels = 1;
     int               mdiff = _cfg.motiondiff * 2.55;
     uint8_t           Y,YP;
     bool              reject=false;
@@ -108,6 +108,7 @@ int mmotion::has_moved(uint8_t* fmt420)
             --y;
         }
     }
+
     _dark /= pixels;
     _motionindex = !_motionindex;
     return _moves;

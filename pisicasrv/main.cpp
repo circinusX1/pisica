@@ -14,7 +14,7 @@ std::string Camtok;
 std::string Srvpas;
 bool        __alive=true;
 std::string _zs;
-int         __cam_port = 8788;
+int         CamPort = 8788;
 /**
  * @brief ControlC
  * @param i
@@ -66,9 +66,9 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    if(argc != 6)
-    {
-        std::cout<< argv[0] <<  " CAM_PORT CLI_PORT PASSWORD campas camtok\n";
+    if(argc != 4)
+    {   //                           1         2       3
+        std::cout<< argv[0] <<  " CAM_PORT CLI_PORT SRV_PASSWORD\n";
         exit(-1);
     }
     skcamsq q;
@@ -77,13 +77,13 @@ int main(int argc, char *argv[])
 
 
     Srvpas = argv[3];
-    Campas = argv[4];  // make this coming from camera
-    Camtok = argv[5];
     LI(strweb_time());
     Sigs();
     p.start_thread();
-    __cam_port = ::atoi(argv[2]);
-    l.spin(argv[3], ::atoi(argv[1]), __cam_port,loop_callback);
+    CamPort = ::atoi(argv[1]);
+    int cliport=::atoi(argv[2]);
+    const char* srvpass = argv[3];
+    l.spin(srvpass, cliport, CamPort, loop_callback);
     p.stop_thread();
 }
 

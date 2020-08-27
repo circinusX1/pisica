@@ -15,7 +15,7 @@ CXX           = g++
 DEFINES       = -DQT_DEPRECATED_WARNINGS -Dcimg_display=0 -Dcimg_use_jpeg -DQT_CORE_LIB
 CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I. -I../rapidjson/include -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
+INCPATH       = -I. -I../common -I../rapidjson/include -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
 QMAKE         = /usr/lib/qt5/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -50,7 +50,8 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = config.cpp \
+SOURCES       = ../common/vigenere.cpp \
+		config.cpp \
 		devvideo.cpp \
 		frame.cpp \
 		frameclient.cpp \
@@ -61,9 +62,9 @@ SOURCES       = config.cpp \
 		osthread.cpp \
 		sock.cpp \
 		streamq.cpp \
-		urlinfo.cpp \
-		vigenere.cpp 
-OBJECTS       = config.o \
+		urlinfo.cpp 
+OBJECTS       = vigenere.o \
+		config.o \
 		devvideo.o \
 		frame.o \
 		frameclient.o \
@@ -74,8 +75,7 @@ OBJECTS       = config.o \
 		osthread.o \
 		sock.o \
 		streamq.o \
-		urlinfo.o \
-		vigenere.o
+		urlinfo.o
 DIST          = ../../../../../../var/www/html/accesspi.php \
 		../../../../../../var/www/html/pisica.php \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
@@ -149,7 +149,7 @@ DIST          = ../../../../../../var/www/html/accesspi.php \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exceptions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
-		pisicacam.pro ../common/config.h \
+		pisicacam.pro ../common/vigenere.h \
 		../rapidjson/include/rapidjson/rapidjson.h \
 		cimg.h \
 		devvideo.h \
@@ -164,8 +164,8 @@ DIST          = ../../../../../../var/www/html/accesspi.php \
 		singleton.h \
 		sock.h \
 		streamq.h \
-		urlinfo.h \
-		vigenere.h config.cpp \
+		urlinfo.h ../common/vigenere.cpp \
+		config.cpp \
 		devvideo.cpp \
 		frame.cpp \
 		frameclient.cpp \
@@ -176,8 +176,7 @@ DIST          = ../../../../../../var/www/html/accesspi.php \
 		osthread.cpp \
 		sock.cpp \
 		streamq.cpp \
-		urlinfo.cpp \
-		vigenere.cpp
+		urlinfo.cpp
 QMAKE_TARGET  = pisicacam
 DESTDIR       = 
 TARGET        = pisicacam
@@ -351,8 +350,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../common/config.h ../rapidjson/include/rapidjson/rapidjson.h cimg.h devvideo.h ffmt.h frame.h frameclient.h jpeger.h main.h md5.h mmotion.h osthread.h singleton.h sock.h streamq.h urlinfo.h vigenere.h $(DISTDIR)/
-	$(COPY_FILE) --parents config.cpp devvideo.cpp frame.cpp frameclient.cpp jpeger.cpp main.cpp md5.cpp mmotion.cpp osthread.cpp sock.cpp streamq.cpp urlinfo.cpp vigenere.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../common/vigenere.h ../rapidjson/include/rapidjson/rapidjson.h cimg.h devvideo.h ffmt.h frame.h frameclient.h jpeger.h main.h md5.h mmotion.h osthread.h singleton.h sock.h streamq.h urlinfo.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../common/vigenere.cpp config.cpp devvideo.cpp frame.cpp frameclient.cpp jpeger.cpp main.cpp md5.cpp mmotion.cpp osthread.cpp sock.cpp streamq.cpp urlinfo.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -398,6 +397,9 @@ compiler_clean: compiler_moc_predefs_clean
 
 ####### Compile
 
+vigenere.o: ../common/vigenere.cpp ../common/vigenere.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o vigenere.o ../common/vigenere.cpp
+
 config.o: config.cpp ../common/config.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o config.o config.cpp
 
@@ -422,7 +424,7 @@ frameclient.o: frameclient.cpp main.h \
 		streamq.h \
 		frame.h \
 		urlinfo.h \
-		vigenere.h \
+		../common/vigenere.h \
 		md5.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o frameclient.o frameclient.cpp
 
@@ -443,7 +445,7 @@ main.o: main.cpp main.h \
 		mmotion.h \
 		ffmt.h \
 		jpeger.h \
-		vigenere.h
+		../common/vigenere.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 md5.o: md5.cpp md5.h
@@ -475,9 +477,6 @@ urlinfo.o: urlinfo.cpp main.h \
 		../common/config.h \
 		urlinfo.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o urlinfo.o urlinfo.cpp
-
-vigenere.o: vigenere.cpp vigenere.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o vigenere.o vigenere.cpp
 
 ####### Install
 

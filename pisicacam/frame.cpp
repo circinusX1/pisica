@@ -14,6 +14,7 @@ bool  frame::add(const uint8_t* buff,
                                 size_t bytes,
                                 uint32_t frmlen)
 {
+    (void)frmlen;
     if((int)bytes <= room())
     {
         ::memcpy(_buff+_accum, buff, bytes);

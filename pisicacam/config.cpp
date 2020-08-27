@@ -1,3 +1,3 @@
-#include "../common/config.h"
+#include "config.h"
 
 

@@ -35,7 +35,7 @@ private:
     bool    _display(skbase&, const std::string&);
     bool    _on_play(skbase&,   const urlreq&, const std::string&);
     bool    _on_player(skbase&, const urlreq& req);
-    bool    _regcamera(const std::string& mac, config& c);
+    bool    _regcamera(const std::string& mac, config& c, const std::string& s);
     void    _authcli(skbase& s,
                      ClisWait& cw,
                      const std::string& mac,
@@ -48,10 +48,9 @@ private:
     skcamsq&        _q;
     tcp_srv_sock    _cam;
     tcp_srv_sock    _cli;
-    std::string     _srvauth;
+    std::string     _srvpass;
     std::string     _srvurl;
     std::map<std::string, ClisWait> _cliswait;
-
 };
 
 #endif // LISTENERS_H

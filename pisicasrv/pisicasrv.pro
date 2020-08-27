@@ -8,7 +8,7 @@ CONFIG -= app_bundle
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
-
+INCLUDEPATH += ../common
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
@@ -21,6 +21,7 @@ QMAKE_CXXFLAGS_DEBUG -= -O2
 QMAKE_CXXFLAGS_DEBUG += -O0  -Wno-unused-parameter
 
 SOURCES += main.cpp \
+    ../common/vigenere.cpp \
     md5.cpp \
     skbase.cpp \
     skcam.cpp \
@@ -31,11 +32,11 @@ SOURCES += main.cpp \
     skweb.cpp \
     sock.cpp \
     vf.cpp \
-    vigenere.cpp \
     logfile.cpp
 
 HEADERS += \
     ../common/config.h \
+    ../common/vigenere.h \
     osthread.h \
     pks.h \
     request.h \
@@ -51,8 +52,7 @@ HEADERS += \
     md5.h \
     encrypt.h \
     logfile.h \
-    vf.h \
-    vigenere.h
+    vf.h
 
 DISTFILES += \
     ../pisicaweb/local.php \

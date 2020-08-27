@@ -77,7 +77,7 @@ std::string sks::show_cams(bool webreq)const
         ret+="&#60;img src='http://";
         ret+=sock::GetLocalIP("127");
         ret+=":";
-        ret+=std::to_string(__cam_port);
+        ret+=std::to_string(CamPort);
         ret+="/";
         ret+=pc->name();
         ret+="'&#62;";
@@ -271,17 +271,17 @@ AGAIN:
     for(;it!=_pool.end();++it)
     {
         camclis* pr =   (*it).second;
-        //
-        // if camera got away
-        //
+
         if(!_expired.empty())
         {
+            /* ???
             if(_expired==pr->_cam->name())
             {
                 config cfg = pr->_cam->configget();
                 cfg.client=0;
                 pr->_cam->configit(cfg);
             }
+            */
             _expired.clear();
         }
 

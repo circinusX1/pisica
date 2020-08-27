@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "main.h"
+#include "config.h"
 #include "frameclient.h"
 #include "vigenere.h"
 #include "md5.h"
@@ -13,10 +14,10 @@ frameclient::frameclient(cbnoty ns,
                          streamq* pq,
                          const urlinfo* url,
                          const char* auth):
-                             _pq(pq),
-                             _cbn(ns),
-                             _url(url),
-                             _auth(auth)
+    _pq(pq),
+    _cbn(ns),
+    _url(url),
+    _auth(auth)
 {
     _now = time(0);
     _bps = 0;
@@ -39,6 +40,7 @@ void frameclient::thread_main()
     time_t      whenc=time(0)+5;
     uint32_t    hdrsz;
     tcp_cli_sock cli;
+    bool        streamnow=false;
 
     srand(time(0));
     while(__alive && !this->is_stopped())
@@ -55,8 +57,6 @@ void frameclient::thread_main()
             if(cli.try_connect(_url->host,_url->port,4000)==0)
             {
                 ++_connectfail;
-                cli.destroy();
-                ::msleep(256);
                 std::cout << "try cannot connect \n";
                 goto FLUSH;
             }
@@ -67,70 +67,59 @@ void frameclient::thread_main()
             else
             {
                 ++_connectfail;
-                cli.destroy();
-                ::msleep(256);
                 std::cout << "try connect failed \n";
+                goto FLUSH;
             }
         }
         _connectfail=0;
         if(cli.is_really_connected())
         {
-            unsigned char incoming[256];
-            char     md5sig[33] = {0};
+            struct          config cloco;
+            char            md5sig[32] = {0};
 
-            // clear text mac + random
-            std::string sr = _mac + "-";
-            sr += std::to_string(rand());
-            ::mg_md5(md5sig,(sr+_auth).c_str(),nullptr);
-            std::string tokenex = md5sig;
+            LOCK_(_pm, cloco=_cfg);
+            // send encrypt(random, campass);
 
-            if(cli.sendall(sr.c_str(),sr.length()) != (int)sr.length())
+            ::strcpy(cloco.mac, _mac.c_str());
+            // campass with srvpas
+            ::strcpy(cloco.acl, xencrypt(_campsw,_srvpsw).c_str());
+            ::strcpy(_cfg.mac, _mac.c_str());
+            ::strcpy(cloco.acl1, xencrypt(_cfg.mac,_campsw).c_str());
+
+            cloco.rndm = rand();
+            std::string  srand = std::to_string(cloco.rndm);
+            strcpy(cloco.acl2,xencrypt(srand, _campsw).c_str());
+
+            if(cli.sendall((const unsigned char*)&cloco, sizeof(cloco)) != sizeof(cloco))
             {
-                cli.destroy();
                 std::cout << "SEND ALL AUTHORIZARION FAILED \n";
                 goto FLUSH;
             }
-
-            //
-            // make sure we sent 256 back
-            //
-            int bytes = cli.receive(incoming, sizeof(incoming));
-            if(bytes>0)
+            ::msleep(0xFF);
+            // server decrypt with cam pass an send back the config
+            int sent = cloco.rndm;
+            if(cli.select_receive((unsigned char*)&cloco, sizeof(cloco), 2000) != sizeof(cloco))
             {
-                char token[128];
-
-                std::cout << ">TOKEN:" << incoming << "\n";
-                incoming[bytes] = 0;
-                std::string inc = (char*)incoming;
-                if(tokenex == inc)
-                {
-                    if(cli.sendall((const unsigned char*)&_cfg, sizeof(_cfg)) != sizeof(_cfg))
-                    {
-                        cli.destroy();
-                        std::cout << "SEND ALL CONFIRMATION FAILED \n";
-                        goto FLUSH;
-                    }
-                    _stream(cli);
-                }
-                else
-                {
-                    std::cout << "PASSWORD CONFIRMATION FAILED \n";
-                    cli.destroy();
-                }
+                std::cout << "RECEIVE FAILED \n";
+                goto FLUSH;
             }
+            if(cloco.rndm != sent)
+            {
+                std::cout << "RECEIVE ALL AUTHORIZARION FAILED \n";
+                goto FLUSH;
+            }
+            LOCK_(_pm, _cfg = cloco);
+            streamnow=true;
         }
-        else
-        {
-            cli.destroy();
-            ::sleep(1);
-        }
+        if(streamnow)
+            _stream(cli);
 FLUSH:
+        cli.destroy();
         frame* pf = _pq->deque();
         if(pf)
-        {
             delete pf;
-        }
-        ::msleep(20);
+        ::msleep(4);
+        streamnow=false;
     }
     cli.destroy();
 }
@@ -142,7 +131,7 @@ void frameclient::_stream(tcp_cli_sock& cli)
 
     ::msleep(258);
 
-    std::cout << "STREAM WHILE \n";
+    std::cout << "STREAM WHILE OFFLINE \n";
     while(cli.is_really_connected())
     {
         FD_ZERO(&rset);
@@ -155,7 +144,7 @@ void frameclient::_stream(tcp_cli_sock& cli)
             if(FD_ISSET(cli.socket(), &rset))
             {
                 int bytes = cli.receive((unsigned char*)&_fconf, sizeof(_fconf));
-                if(bytes >= sizeof(_fconf))
+                if(bytes == sizeof(_fconf))
                 {
                     _cbn(&_fconf);
                 }

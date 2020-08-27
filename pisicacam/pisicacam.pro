@@ -13,6 +13,8 @@ CONFIG -= app_bundle
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += cimg_display=0
 DEFINES += cimg_use_jpeg
+
+INCLUDEPATH += ../common
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
@@ -21,6 +23,7 @@ DEFINES += cimg_use_jpeg
 INCLUDEPATH += ../rapidjson/include
 
 SOURCES += \
+        ../common/vigenere.cpp \
         config.cpp \
         devvideo.cpp \
         frame.cpp \
@@ -32,8 +35,7 @@ SOURCES += \
         osthread.cpp \
         sock.cpp \
         streamq.cpp \
-        urlinfo.cpp \
-        vigenere.cpp
+        urlinfo.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -41,7 +43,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
-    ../common/config.h \
+    ../common/vigenere.h \
     ../rapidjson/include/rapidjson/rapidjson.h \
     cimg.h \
     devvideo.h \
@@ -56,8 +58,7 @@ HEADERS += \
     singleton.h \
     sock.h \
     streamq.h \
-    urlinfo.h \
-    vigenere.h
+    urlinfo.h
 
 unix|win32: LIBS += -lpthread -ljpeg -lv4l2
 

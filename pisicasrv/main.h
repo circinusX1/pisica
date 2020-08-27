@@ -9,7 +9,7 @@
 
 extern bool __alive;
 extern std::string _zs;
-extern int __cam_port;
+extern int CamPort;
 #define EOS '\0'
 
 

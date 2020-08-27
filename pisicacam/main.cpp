@@ -3,48 +3,53 @@
 #include "frameclient.h"
 #include "singleton.h"
 #include "devvideo.h"
-#include "../common/config.h"
+#include "config.h"
 #include "ffmt.h"
 #include "jpeger.h"
 #include "vigenere.h"
 
 bool                __alive = true;
-static umutex*      _pm;
+umutex*             _pm;
 static bool         _dconf = false;
-static std::string  _sp;// = argv[1];
-static std::string  _pp;// = argv[1];
-static std::string  _tok;// = argv[1];
+std::string         _srvpsw;
+std::string         _campsw;
 std::string         _mac;
-config       _cfg = {0,
-                         "http://localhost:8888",
-                         "/dev/video0",
-                         "",
-                         640,
-                         480,
-                         30,
-                         50,
-                         800,
-                         100,
-                         10,
-                         1000,
-                         80,
-                         1,
-                         10,
-                         100,
-                         0,
-                         4,
-                         1,
-                         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                         1,
-                        1,
-                        0
-             };
+
+config       _cfg = {"http://localhost:8888",
+                     "/dev/video0",
+                     "", //acl
+                     "", //acl1
+                     "",
+                     "",
+                     "",
+                     false,
+                     0,
+                     640,
+                     480,
+                     15,
+                     100,
+                     500,
+                     128,
+                     100,
+                     1,
+                     80,
+                     1,
+                     250,
+                     100,
+                     0,
+                     8, // pix/nr * nr to eliminate noise pixels
+                     1,
+                     0,
+                     1,
+                     1
+                    };
 
 void setts(config* pc);
 
 
 void ControlC (int i)
 {
+    (void)(i);
     __alive = false;
     printf("Exiting...\n");
 }
@@ -52,6 +57,7 @@ void ControlC (int i)
 
 void ControlP (int i)
 {
+    (void)(i);
 }
 
 
@@ -71,9 +77,10 @@ int main(int argc, char *argv[])
         return -1;
     }
     // srv srcpass campass
-    if(argc!=6)
+    if(argc!=5)
     {
-        std::cout << argv[0] << "  server server-password cam-password cam-token dev/video# \n";
+        //              0               1   2               3           4
+        std::cout << argv[0] << "  server server-password cam-password dev/video# \n";
         std::cout << "\n";
         exit(1);
     }
@@ -82,11 +89,11 @@ int main(int argc, char *argv[])
     urlinfo u(argv[1]);
     streamq q;
 
-    ::strcpy(_cfg.device,argv[5]);
+    ::strcpy(_cfg.device, /*dev*/ argv[4]);
     devvideo* pdv = new devvideo(&_cfg);
     if(pdv->open())
     {
-        config          cfg = {0};
+        config          cfg;
         int             moinertia=0;
         uint32_t        jpgsz = 0;
         uint8_t*        pjpg = 0;
@@ -98,48 +105,46 @@ int main(int argc, char *argv[])
         uint32_t        ticksave =  gtc();
         int             movepix = 0;
         bool            bstream = false;
-        time_t          now;
-        int             delay = 10;
+        time_t          now = ticksave;
         frameclient     c(setts, &q, (const urlinfo*)&u, argv[2]);
 
-        _sp = argv[2];
-        _pp = argv[3];
-        _tok = argv[4];
-        ::strcpy(_cfg.authplay,xencrypt(_tok,_pp).c_str());
+        ::srand (time(NULL));
+        memcpy(&cfg,&_cfg,sizeof(cfg));
+        cfg.dirty = false;
+        _srvpsw = argv[2];
+        _campsw = argv[3];
         _mac = ::macaddr();
+        std::cout << "cam token:" << _mac << "\n";
+        // mac
+
+
         _pm = &m;
         c.start_thread();
         std::cout << "MAC: " << _mac << "\n";
         while(__alive)
         {
             now = gtc();
-            do{
-                AutoLock a(_pm);
-                if(_dconf)
-                {
-                    ::memcpy(&cfg, &_cfg, sizeof(cfg));
-                    _dconf = false;
-                }
-            }while(0);
-            if(cfg.dirty)
+            LOCK_(_pm,
+            if(_cfg.dirty)
             {
+                _cfg.dirty=false;
+                memcpy(&cfg,&_cfg,sizeof(_cfg));
                 pdv->close();
                 delete pdv;
-                pdv = new devvideo(&cfg);
+                pdv = new devvideo(&_cfg);
                 if(pdv->open()==false)
                 {
-                    break;
+                    std::cout << "CANNOT REPLLY CONFIG\n";
+                    __alive = false;
                 }
-                cfg.dirty=0;
-            }
+            });
 
             sz = 0;
             err = 0;
             const uint8_t*  pb422 = pdv->read(w, h, sz, err);
             if(pb422)
             {
-		        //std::cout << "got:" << w << "x" << h << ":" << sz << 
-"\n";
+                //std::cout << "got:" << w << "x" << h << ":" << sz <<  "\n";
                 jpgsz=ffmt->convert420(pb422, w, h, sz, cfg.quality, &pjpg);
                 //
                 // motion
@@ -199,15 +204,11 @@ int main(int argc, char *argv[])
                             exit(2);
                         }
                     }
-		    else
-	 	    {
-			std::cout << "new frame failed\n";
-                    }
                 }
             }else
             {
-	       std::cout << "getting 422 failed\n";
-	    }
+                std::cout << "getting 422 failed\n";
+            }
             bstream = false;
             ticksave = now;
             ::msleep(50);
@@ -223,7 +224,7 @@ int main(int argc, char *argv[])
 void setts(config* pc)
 {
     AutoLock a(_pm);
-   ::memcpy(&_cfg,pc,sizeof(_cfg));
-    ::strcpy(_cfg.authplay,xencrypt(_tok,_pp).c_str());
-   _dconf=true;
+    ::memcpy(&_cfg,pc,sizeof(_cfg));
+    ::strcpy(_cfg.acl,xencrypt(_mac,_campsw).c_str());
+    _dconf=true;
 }

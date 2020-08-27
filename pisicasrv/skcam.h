@@ -49,7 +49,6 @@ private:
     size_t              _bps;
     umutex              _m;
     config              _c;
-    bool                _dconf=false;
     sksrv*              _psrv=nullptr;
 };
 
