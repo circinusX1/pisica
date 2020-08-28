@@ -22,7 +22,7 @@ public:
     sks(skcamsq& q):_q(q){
     }
     ~sks();
-    skcam*    has(const std::string& name);
+    skcam*      has(const std::string& name);
     bool        has(const skbase& sin)const;
     std::string show_cams(bool webreq)const;
     void closeall();

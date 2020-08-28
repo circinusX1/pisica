@@ -145,7 +145,7 @@ int sks::_fd_set(fd_set& fdr)
 bool sks::_fd_check(fd_set& fdr, int ndfs)
 {
     bool    dirty = false;
-    timeval tv {0,200};
+    timeval tv {0,0xFF};
     int     sent;
     int     sel =::select(ndfs,&fdr,0,0,&tv);
 

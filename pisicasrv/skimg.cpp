@@ -40,9 +40,13 @@ int skimg::snd(const uint8_t* b, size_t len,uint32_t extra)
                                     (int)len,
                                     (int)timestamp.tv_sec,
                                     (int)timestamp.tv_usec);
-    skweb::snd((const uint8_t*)buffer,hl);
-    skweb::snd(b,len);
-    skweb::snd((const uint8_t*)JpegPart,strlen(JpegPart));
-    return 1;
+    int rv = skweb::snd((const uint8_t*)buffer,hl);
+    if(rv == hl)
+    {
+        skweb::snd(b,len);
+        skweb::snd((const uint8_t*)JpegPart,strlen(JpegPart));
+        return rv;
+    }
+    return 0;
 }
 

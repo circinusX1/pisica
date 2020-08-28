@@ -12,7 +12,7 @@
 #include "vigenere.h"
 #include "md5.h"
 
-#define TTL_CLI 130
+#define TTL_CLI 16
 
 static char HDR[] = "HTTP/1.0 200 OK\r\n"
                     "Connection: close\r\n"
@@ -242,7 +242,7 @@ bool    sksrv::_on_player(skbase& s, const urlreq& req)
                 std::string reply = "<li>CAMERAS<ul>";
                 for (const auto& a: _cliswait)
                 {
-                    reply += "<li>camera: <a href='http://";
+                    reply += "<li>cameras: <a href='http://";
                     reply += _srvurl + "/";
                     reply += a.first + "'>";
                     reply += a.first +"</a></li>";

@@ -149,6 +149,7 @@ void    skcam::configit(const config& c)
 
 void skcam::_record(const uint8_t* pb, size_t l)
 {
+    return;
     std::string fn = "/tmp/"; fn+=name(); fn+=".jpg";
     bool nf = ::access(fn.c_str(),0)!=0;
 
