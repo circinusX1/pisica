@@ -8,7 +8,7 @@
 #include "urlinfo.h"
 #include "config.h"
 #include <iostream>
-#include <curl/curl.h>
+//#include <curl/curl.h>
 
 typedef void (*cbnoty)(config* pc);
 
