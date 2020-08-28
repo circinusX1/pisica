@@ -17,6 +17,6 @@ private:
 };
 
 
-#define DERR() "Error: " << errno << "\n";
+
 
 #endif // OUTFILEFMT_H

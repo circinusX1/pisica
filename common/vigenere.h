@@ -69,7 +69,7 @@ static std::string base64_decode(const std::string &in) {
 inline std::string xencrypt(const std::string& msg, std::string& key) {
     std::string b64_str = base64_encode(msg);
     std::string vigenere_msg = encrypt_vigenere(b64_str, key);
-    // std::cout << vigenere_msg << std::endl;
+    // COUT_( vigenere_msg << std::endl;
     return vigenere_msg;
 }
 

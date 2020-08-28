@@ -9,6 +9,7 @@
 #include "md5.h"
 
 #define MAX_CONNECTS 65535
+#define RECON_TOUT   8
 
 frameclient::frameclient(cbnoty ns,
                          streamq* pq,
@@ -36,9 +37,7 @@ void frameclient::stop_thread()
 
 void frameclient::thread_main()
 {
-    size_t      tinq;
     time_t      whenc=time(0)+5;
-    uint32_t    hdrsz;
     tcp_cli_sock cli;
     bool        streamnow=false;
 
@@ -47,7 +46,8 @@ void frameclient::thread_main()
     {
         if(time(0)>whenc && !cli.isopen())
         {
-            whenc=time(0) + 5; // every 2 seconds
+            whenc=time(0) + RECON_TOUT;       // every 5 seconds
+            COUT_("RECONNECTING ");
             cli.destroy();
             cli.create(_url->port);
             cli.set_blocking(1);
@@ -57,17 +57,17 @@ void frameclient::thread_main()
             if(cli.try_connect(_url->host,_url->port,4000)==0)
             {
                 ++_connectfail;
-                std::cout << "try cannot connect \n";
+                COUT_( "TRY CANNOT CONNECT ");
                 goto FLUSH;
             }
             if(cli.is_really_connected())
             {
-                std::cout << "FRM connected to: " <<  _url->host <<":" <<_url->port << "\n";
+                COUT_( "FRM CONNECTED TO: " <<  _url->host <<":" <<_url->port );
             }
             else
             {
                 ++_connectfail;
-                std::cout << "try connect failed \n";
+                COUT_( "TRY CONNECT FAILED ");
                 goto FLUSH;
             }
         }
@@ -75,8 +75,8 @@ void frameclient::thread_main()
         if(cli.is_really_connected())
         {
             struct          config cloco;
-            char            md5sig[32] = {0};
 
+            COUT_("REALLY CONNECTED ");
             LOCK_(_pm, cloco=_cfg);
             // send encrypt(random, campass);
 
@@ -89,23 +89,27 @@ void frameclient::thread_main()
             cloco.rndm = rand();
             std::string  srand = std::to_string(cloco.rndm);
             strcpy(cloco.acl2,xencrypt(srand, _campsw).c_str());
-
+            COUT_("SENDING " << sizeof(cloco));
             if(cli.sendall((const unsigned char*)&cloco, sizeof(cloco)) != sizeof(cloco))
             {
-                std::cout << "SEND ALL AUTHORIZARION FAILED \n";
+                COUT_( "SEND ALL AUTHORIZARION FAILED ");
                 goto FLUSH;
             }
             ::msleep(0xFF);
             // server decrypt with cam pass an send back the config
             int sent = cloco.rndm;
+#ifdef DEBUG
+            if(cli.select_receive((unsigned char*)&cloco, sizeof(cloco), 60000) != sizeof(cloco))
+#else
             if(cli.select_receive((unsigned char*)&cloco, sizeof(cloco), 2000) != sizeof(cloco))
+#endif
             {
-                std::cout << "RECEIVE FAILED \n";
+                COUT_( "RECEIVE FAILED");
                 goto FLUSH;
             }
             if(cloco.rndm != sent)
             {
-                std::cout << "RECEIVE ALL AUTHORIZARION FAILED \n";
+                COUT_( "RECEIVE ALL AUTHORIZARION FAILED ");
                 goto FLUSH;
             }
             LOCK_(_pm, _cfg = cloco);
@@ -114,13 +118,18 @@ void frameclient::thread_main()
         if(streamnow)
             _stream(cli);
 FLUSH:
-        cli.destroy();
+        if(cli.isopen())
+        {
+            COUT_("DESTROING CONNECTION FLUSH ");
+            cli.destroy();
+        }
         frame* pf = _pq->deque();
         if(pf)
             delete pf;
         ::msleep(4);
         streamnow=false;
     }
+    COUT_("DESTROING CONNECTION EXIT");
     cli.destroy();
 }
 
@@ -128,10 +137,14 @@ FLUSH:
 void frameclient::_stream(tcp_cli_sock& cli)
 {
     fd_set  rset;
+    int     somtime;
 
     ::msleep(258);
-
-    std::cout << "STREAM WHILE OFFLINE \n";
+    if(!cli.is_really_connected()){
+        COUT_( "STREAM WHILE OFFLINE ");
+        cli.destroy();
+        return;
+    }
     while(cli.is_really_connected())
     {
         FD_ZERO(&rset);
@@ -146,18 +159,19 @@ void frameclient::_stream(tcp_cli_sock& cli)
                 int bytes = cli.receive((unsigned char*)&_fconf, sizeof(_fconf));
                 if(bytes == sizeof(_fconf))
                 {
+                    COUT_( "REMOTE REQUESTED CONFIG");
                     _cbn(&_fconf);
                 }
                 if(bytes==0)
                 {
                     cli.destroy();
-                    std::cout << "REMOTE CLOSED CONNECTION\n";
+                    COUT_( "REMOTE CLOSED CONNECTION");
                     break;
                 }
-                if(_fconf.motion+_fconf.lapse+_fconf.client==0)
+                if(_fconf.motion+_fconf.timelapse+_fconf.webclienton==0)
                 {
                     cli.destroy();
-                    std::cout << "REMOTE DOES NOT WANT STREAMING\n";
+                    COUT_( "REMOTE DOES NOT WANT STREAMING");
                     break;
                 }
             }
@@ -165,10 +179,14 @@ void frameclient::_stream(tcp_cli_sock& cli)
         frame* pf = _pq->deque();
         if(pf)
         {
+            if((++somtime & 0x1F)==0x1F){
+                std::cout <<(".");
+                std::cout.flush();
+            }
             size_t sent = cli.sendall(pf->buffer(), pf->length());
             if(sent != pf->length())
             {
-                std::cout << "remote closed " <<  _url->host <<":" <<_url->port << "\n";
+                COUT_( "REMOTE CLOSED " <<  _url->host <<":" <<_url->port );
                 cli.destroy();
                 break;
             }
@@ -177,20 +195,19 @@ void frameclient::_stream(tcp_cli_sock& cli)
             _lastfrmtime=time(0);
             if(_lastfrmtime>(_now+5))
             {
-                std::cout << "PUSHES:" << _bps/5 << "\n";
+                COUT_( "PUSHES:" << _bps/5 );
                 _bps=0;
                 _now=_lastfrmtime;
             }
             delete pf; pf=nullptr;
-            _noframe = 0;
+            _noframe = MAX_NO_FRAMES;
         }
         else
         {
-            if(++_noframe > 300)
+            if(--_noframe <= 0)
             {
-                std::cout << "NO FRAMES STREAMING. CLOSING CONNECTION\n";
+                COUT_( "NO FRAMES STREAMING. CLOSING CONNECTION");
                 cli.destroy();
-                _noframe = 0;
             }
         }
     }

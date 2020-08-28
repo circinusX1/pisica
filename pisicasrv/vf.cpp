@@ -31,8 +31,9 @@ vf::~vf()
 size_t  vf::set(size_t bytes)
 {
     size_t room = _cap - bytes;
+    (void)(room);
     _accum += bytes;
-    return 0;   // all in
+    return 0;
 }
 
 void    vf::set_len(uint32_t fl)

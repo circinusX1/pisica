@@ -20,6 +20,7 @@
 #include <map>
 #include "sock.h"
 #include "vf.h"
+#include "config.h"
 
 extern std::string empty_string;
 struct optionsmap : public std::map<std::string,std::string>
@@ -39,14 +40,13 @@ class skbase : public tcp_cli_sock
 public:
     typedef enum _STYPE{
         NONE = 0,
-        CAM,
-        CLIRTSP,
-        CLIENT,
+        CAM=5,
+        CLIENT=0xFF,
     }STYPE;
 
 
     skbase(skbase& r, STYPE t);
-    skbase(){};
+    skbase(STYPE t):_t(t){ COUT_("SKBASE " << _t);};
     virtual ~skbase();
     virtual bool    isopen();
     virtual bool destroy(bool be=true);

@@ -18,6 +18,7 @@
 */
 #include <iostream>
 #include "jpeger.h"
+#include "config.h"
 
 extern bool __alive;
 
@@ -54,11 +55,11 @@ uint32_t jpeger::convert420(const uint8_t* fmt420, int w, int h, int isize,
     }
     if(_image == nullptr)
     {
-        std::cerr <<  "out of memory" << DERR();
+        DERR("out of memory");
         __alive=false;
         return 0;
     }
-   // std::cout <<"img=" << std::hex << (size_t)_image << std::dec << " pointer \n";
+   // COUT_("img=" << std::hex << (size_t)_image << std::dec << " pointer \n";
     _imgsize =  _put_jpeg_yuv420p_memory(_image, isize, fmt420, w, h, quality, 0);
     *pjpeg = _image;
     return  _imgsize;
@@ -74,6 +75,7 @@ uint32_t jpeger::convertBW(const uint8_t* uint8buf, int w, int h, int imgsz,
     JSAMPROW row_pointer[1];	/* pointer to JSAMPLE row[s] */
     int row_stride;
 
+    (void)(quality);
     memset(_image,255, _memsz);
 
     cinfo.err = jpeg_std_error(&jerr);
@@ -122,6 +124,7 @@ int jpeger::_put_jpeg_yuv420p_memory(uint8_t *pdest,
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr jerr;
 
+    (void)(tm);
     data[0] = y;
     data[1] = cb;
     data[2] = cr;

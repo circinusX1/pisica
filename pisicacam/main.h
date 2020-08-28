@@ -10,4 +10,7 @@ extern config       _cfg;
 extern std::string  _campsw;
 extern std::string  _srvpsw;
 extern umutex*      _pm;
+
+
 #endif //MAIN_H
+

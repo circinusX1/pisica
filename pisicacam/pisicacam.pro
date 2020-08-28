@@ -11,6 +11,7 @@ CONFIG -= app_bundle
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
+DEFINES += DEBUG
 DEFINES += cimg_display=0
 DEFINES += cimg_use_jpeg
 
@@ -43,6 +44,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
+    ../common/config.h \
     ../common/vigenere.h \
     ../rapidjson/include/rapidjson/rapidjson.h \
     cimg.h \

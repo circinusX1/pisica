@@ -9,8 +9,10 @@ mmotion::mmotion(int w, int h, int nr):_w(w),_h(h),_nr(nr)
         _mw=w/2;
     else if(_mw<8)
         _mw=8;
-    if(_nr==4)_nr=4; // noise reduction
     _mh = (_mw * _h) / _w;
+
+    if(_nr!=4)_nr=4; // noise reduction
+
     size_t msz = (_mw) * (_mh);
     _motionbufs[0] = new uint8_t[msz];
     _motionbufs[1] = new uint8_t[msz];
@@ -42,9 +44,9 @@ int mmotion::has_moved(uint8_t* fmt420)
     uint8_t*          prowprev = _motionbufs[_motionindex ? 0 : 1];
     uint8_t*          prowcur = _motionbufs[_motionindex ? 1 : 0];
     int               pixels = 1;
-    int               mdiff = _cfg.motiondiff * 2.55;
+    int               mdiff = _cfg.motiondiff * 2.55; // prev frame - curframe
     uint8_t           Y,YP;
-    bool              reject=false;
+    bool              motionrejectrects=false;
 
     if(mdiff < 1) mdiff = 4;
     _dark  = 0;
@@ -53,21 +55,21 @@ int mmotion::has_moved(uint8_t* fmt420)
     {
         for (int x = 0; x < _mw; ++x)//width
         {
-            reject=false;
+            motionrejectrects=false;
             for(int r=0;r<16;r+=4)
             {
-                const rrect* rt = (const rrect*)&_cfg.reject[r];
+                const rrect* rt = (const rrect*)&_cfg.motionrejectrects[r];
                 if(rt->xm || rt->ym || rt->xM || rt->yM)
                 {
                     if(x<rt->xm)continue;
                     if(x>rt->xM)continue;
                     if(y<rt->ym)continue;
                     if(y>rt->yM)continue;
-                    reject=true;
+                    motionrejectrects=true;
                     break;
                 }
             }
-            if(reject)
+            if(motionrejectrects)
                 continue;
             Y  = *(base_py+((y*dy)  * _w) + (x*dx)); /// curent pixel
             _dark += uint32_t(Y);

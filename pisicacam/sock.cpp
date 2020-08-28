@@ -29,6 +29,8 @@
 #include <time.h>
 #include "sock.h"
 #include "main.h"
+#include "config.h"
+
 #ifndef _WIN32
 #   include <ifaddrs.h>
 #endif //
@@ -1079,7 +1081,7 @@ int tcp_cli_sock::s4connect(const char* sip, int port, CancelCB cbCall, void* pU
     err = ::connect(_thesock, (const struct sockaddr*)&_remote_sin, _remote_sin.rsz());
     if(err==-1)
     {
-        std::cout << "connect() "<< strerror(errno) << "\n";
+        COUT_( "connect() "<< strerror(errno) );
         _error = errno;
     }
     if(_error == EINPROGRESS || _error == WOULDBLOCK)
@@ -1090,7 +1092,7 @@ int tcp_cli_sock::s4connect(const char* sip, int port, CancelCB cbCall, void* pU
             return -1;
         }
 
-        std::cout << "connect() in progress\n";
+        COUT_( "connect() in progress");
 
         int nfds = (int)_thesock+1;
         time_t     ti = time(0) + 8;
@@ -1104,7 +1106,7 @@ int tcp_cli_sock::s4connect(const char* sip, int port, CancelCB cbCall, void* pU
             {
                 if(FD_ISSET(_thesock, &fdWr))
                 {
-                    std::cout << "really connected\n";
+                    COUT_( "really connected");
                     _connecting = 0;
                     return _thesock;   // no error
                 }
@@ -1114,12 +1116,12 @@ int tcp_cli_sock::s4connect(const char* sip, int port, CancelCB cbCall, void* pU
     }
     if(err==-1)
     {
-        std::cout << "connect() desotryed\n";
+        COUT_( "connect() desotryed");
         _connecting = 0;
         destroy();
         return 0;
     }
-    std::cout << "connect() in progress return\n";
+    COUT_( "connect() in progress return");
     _connecting = 0;
     return _thesock;
 }

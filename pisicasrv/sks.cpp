@@ -5,6 +5,7 @@
 #include "skweb.h"
 #include "sksrv.h"
 #include "skcamsq.h"
+#include "config.h"
 
 sks::~sks()
 {
@@ -106,6 +107,7 @@ void sks::thread_main()
 
 void sks::signal_to_stop()
 {
+    COUT_("SIGNAL TO STOP");
     for(const auto& a : _pool)
     {
         if(a.second->_cam!=nullptr)
@@ -151,7 +153,7 @@ bool sks::_fd_check(fd_set& fdr, int ndfs)
 
     ++_lops;
     if(sel==-1){
-        std::cerr << " socket select error critical \n";
+        DERR( " socket select error critical");
         __alive=false;
         return false;    //dirty
     }
@@ -200,15 +202,18 @@ bool sks::_fd_check(fd_set& fdr, int ndfs)
 
 bool sks::_kill_kons(camclis* p, skbase* psock, const skbase::STYPE& s)
 {
+    COUT_("KILL CONS FOO");
     int dirty=false;
     if(s==skbase::CAM)
     {
+        COUT_("KILL CONS CAM");
         ((skcam*)psock)->bind(nullptr,false);
         psock->destroy();
         if(p->_clis.size())
         {
             for(auto& cs : p->_clis)
             {
+                COUT_("KILL CONS CLI " << cs->name());
                 cs->destroy();
             }
         }
@@ -216,6 +221,7 @@ bool sks::_kill_kons(camclis* p, skbase* psock, const skbase::STYPE& s)
     }
     else
     {
+        COUT_("KILL CONS CLI");
         ((skcam*)p->_cam)->bind((skweb*)psock,false);
         psock->destroy();
         dirty=true;
@@ -287,9 +293,11 @@ AGAIN:
 
         if(pr->_cam->isopen()==false)
         {
+            COUT_("CAM NOT OPEN. DESTROY CAM");
             for(auto& client : pr->_clis)
             {
                 _kli_out(pr, client);
+                COUT_("     CLI FOR CAM DESTROY");
                 client->destroy();
                 DELETE_PTR(client);
             }
@@ -317,6 +325,7 @@ DELTAG:
                         pr->_cam->bind((skweb*)*it,false);
                     }
                     _kli_out(pr, *it);
+                    COUT_("DESTROY LEFTOVER  CLIS");
                     (*it)->destroy();
                     DELETE_PTR(*it);
                     pr->_clis.erase(it);

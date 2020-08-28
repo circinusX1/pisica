@@ -149,7 +149,8 @@ DIST          = ../../../../../../var/www/html/accesspi.php \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exceptions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
-		pisicacam.pro ../common/vigenere.h \
+		pisicacam.pro ../common/config.h \
+		../common/vigenere.h \
 		../rapidjson/include/rapidjson/rapidjson.h \
 		cimg.h \
 		devvideo.h \
@@ -350,7 +351,7 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../common/vigenere.h ../rapidjson/include/rapidjson/rapidjson.h cimg.h devvideo.h ffmt.h frame.h frameclient.h jpeger.h main.h md5.h mmotion.h osthread.h singleton.h sock.h streamq.h urlinfo.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../common/config.h ../common/vigenere.h ../rapidjson/include/rapidjson/rapidjson.h cimg.h devvideo.h ffmt.h frame.h frameclient.h jpeger.h main.h md5.h mmotion.h osthread.h singleton.h sock.h streamq.h urlinfo.h $(DISTDIR)/
 	$(COPY_FILE) --parents ../common/vigenere.cpp config.cpp devvideo.cpp frame.cpp frameclient.cpp jpeger.cpp main.cpp md5.cpp mmotion.cpp osthread.cpp sock.cpp streamq.cpp urlinfo.cpp $(DISTDIR)/
 
 

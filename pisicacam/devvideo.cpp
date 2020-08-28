@@ -31,7 +31,7 @@
 devvideo::devvideo(const config* pcfg)
 {
     //const char* device, int x, int y, int fps, int motionlow, int motionhi, int nr)
-    std::cout << "USING  DEVICE " << pcfg->device << "\n";
+    COUT_("USING  DEVICE " << pcfg->device );
     _sdevice = pcfg->device;
     _curbuffer = 0;
     _xy[0]=pcfg->w;
@@ -57,7 +57,7 @@ devvideo::~devvideo()
 
 bool devvideo::open()
 {
-    std::cout << "open device \n";
+    COUT_("TRY TO OPEN " << _sdevice);
 
     size_t diez = _sdevice.find('*');
     if(diez != std::string::npos)
@@ -67,17 +67,17 @@ bool devvideo::open()
         {
             std::string check = sdev + std::to_string(i);
 
-            std::cout << "opening: " << check << "\n";
+            COUT_( "OPENING: " << check);
 
             if (::access(check.c_str(),0)!=0)
             {
-                std::cout << "No Device:  "<< check << ", " <<  strerror(errno)  << "\n";
+                COUT_("No Device:  "<< check << ", " <<  strerror(errno) );
                 continue;
             }
             _device = v4l2_open(check.c_str(), O_RDWR | O_NONBLOCK, 0);
             if (-1 == _device)
             {
-                std::cout << "Cannot open " << check << ", " <<  strerror(errno)  << "\n";
+                COUT_( "Cannot open " << check << ", " <<  strerror(errno));
                 continue;
             }
             _sdevice=check;
@@ -88,7 +88,7 @@ bool devvideo::open()
     {
         if (::access(_sdevice.c_str(),0)!=0)
         {
-            std::cout << "No Device: "<< _sdevice << " " <<  errno  << "\n";
+            COUT_( "No Device: "<< _sdevice << " " <<  errno  );
             return false;
         }
         _device = v4l2_open(_sdevice.c_str(), O_RDWR | O_NONBLOCK, 0);
@@ -97,7 +97,7 @@ bool devvideo::open()
 
     if (-1 == _device)
     {
-        std::cout << "Cannot open " << _sdevice << " " <<  errno  << "\n";
+        COUT_( "Cannot open " << _sdevice << " " <<  errno  );
         return false;
     }
 
@@ -106,23 +106,23 @@ bool devvideo::open()
     struct v4l2_crop        crop;// = {0};
     struct v4l2_cropcap     cropcap;// = {0};
     struct v4l2_fmtdesc     fmtdesc;
-    struct v4l2_frmsize_discrete fmdiscrete;
+    //struct v4l2_frmsize_discrete fmdiscrete;
 
     if (-1 == _ioctl(VIDIOC_QUERYCAP, &caps))
     {
-        std::cout << "_ioctl" << _sdevice << " " <<  errno  << "\n";
+        COUT_( "_ioctl" << _sdevice << " " <<  errno  );
         return false;
     }
 
     if (!(caps.capabilities & V4L2_CAP_VIDEO_CAPTURE))
     {
-        std::cout << "no video capture device" << _sdevice << " " <<  errno  << "\n";
+        COUT_( "no video capture device" << _sdevice << " " <<  errno );
         return false;
     }
 
     if (!(caps.capabilities & V4L2_CAP_STREAMING))
     {
-        std::cout << "no video streaming device" << _sdevice << " " <<  errno  << "\n";
+        COUT_( "no video streaming device" << _sdevice << " " <<  errno );
         return false;
     }
     cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -149,7 +149,7 @@ bool devvideo::open()
     frmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUV420;
     if (-1 == _ioctl(VIDIOC_S_FMT, &frmt))
     {
-        std::cout << "Unsupported format WxH" << _sdevice << " " <<  errno  << "\n";
+        COUT_( "Unsupported format WxH" << _sdevice << " " <<  errno  );
         return false;
     }
     // realign
@@ -157,7 +157,7 @@ bool devvideo::open()
     _xy[1] = frmt.fmt.pix.height;
     if (frmt.fmt.pix.pixelformat != V4L2_PIX_FMT_YUV420)
     {
-        std::cout << "libv4l cannot process YUV420 format. \n";
+        COUT_( "libv4l cannot process YUV420 format.");
         return false;
     }
 
@@ -171,10 +171,10 @@ bool devvideo::open()
 
         if (-1 == _ioctl(VIDIOC_S_PARM, &fint))
         {
-            std::cout << "error set frame interval " << _fps << "\n";
+            COUT_( "error set frame interval " << _fps );
         }
         _fps = fint.parm.capture.timeperframe.denominator;
-        std::cout << "FPS: recalculated duet camera limitations at: " << _fps << "\n";
+        COUT_( "FPS: recalculated to: " << _fps );
     }
     uint32_t wmin = frmt.fmt.pix.width * 2;
     if (frmt.fmt.pix.bytesperline < wmin)
@@ -197,7 +197,7 @@ bool devvideo::open()
 
     if (-1 == _ioctl(VIDIOC_REQBUFS, &req))
     {
-        std::cout << "libv4l does not support VIDIOC_REQBUFS(V4L2_MEMORY_MMAP) . \n";
+        COUT_( "libv4l does not support VIDIOC_REQBUFS(V4L2_MEMORY_MMAP) ");
 
         req.count = VIDEO_BUFFS;
         req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -205,7 +205,7 @@ bool devvideo::open()
 
         if (-1 == _ioctl(VIDIOC_REQBUFS, &req))
         {
-            std::cout << "libv4l does not support VIDIOC_REQBUFS(V4L2_MEMORY_USERPTR) . \n";
+            COUT_( "libv4l does not support VIDIOC_REQBUFS(V4L2_MEMORY_USERPTR) ");
             return false;
         }
 
@@ -218,7 +218,7 @@ bool devvideo::open()
             _buffers[i].mmap = V4L2_MEMORY_USERPTR;
             if (_buffers[i].start==0)
             {
-                std::cout << "out of memory: " << buffer_size << " bytes \n";
+                COUT_( "out of memory: " << buffer_size << " bytes ");
                 return false;
             }
 
@@ -231,7 +231,7 @@ bool devvideo::open()
 
             if (-1 == _ioctl(VIDIOC_QBUF, &buf))
             {
-                std::cout << "VIDIOC_QBUF: " << buffer_size << " bytes \n";
+                COUT_( "VIDIOC_QBUF: " << buffer_size << " bytes ");
                 return false;
             }
         }
@@ -244,7 +244,7 @@ bool devvideo::open()
     // continue with mmap
     if (req.count < 2)
     {
-        std::cout<< "buffer memory \n";
+        COUT_( "buffer memory ");
         return false;
     }
 
@@ -258,7 +258,7 @@ bool devvideo::open()
 
         if (-1 == _ioctl(VIDIOC_QUERYBUF, &buf))
         {
-            std::cout<< "VIDIOC_QUERYBUF memory \n";
+            COUT_( "VIDIOC_QUERYBUF memory");
             return false;
         }
         _buffers[i].length = buf.length;
@@ -272,7 +272,7 @@ bool devvideo::open()
 
         if (MAP_FAILED == _buffers[i].start)
         {
-            std::cout<< "MAP_FAILED memory \n";
+            COUT_("MAP_FAILED memory");
             return false;
         }
 
@@ -295,7 +295,7 @@ bool devvideo::open()
         _pmt = new mmotion(_xy[0], _xy[1], _nr);
         if(_pmt==0)
         {
-            std::cout << "motion out memeory. motion is off \n";
+            COUT_( "motion out memeory. motion is off");
             _motionhi = 0;
         }
     }
@@ -360,12 +360,12 @@ const uint8_t* devvideo::read(int& w, int& h, size_t& sz, bool& fatal)
     {
         fatal=true;
         _fatal=true;
-	std::cerr << "fatal seelect() fd=" << _device << "\n";
+        COUT_( "fatal select() fd=" << _device );
         return 0; // fatal
     }
     if(r == 0 || !FD_ISSET(_device, &fds))
     {
-        std::cout << " fdset = 0 \n";
+        COUT_( " fdset = 0");
         return 0;
     }
 

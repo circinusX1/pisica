@@ -86,7 +86,7 @@ int skcam::ioio(const std::vector<skbase*>& clis)
                     if(_c.dirty)
                     {
                         this->snd((const unsigned char*)&_c, sizeof(_c));
-                        _c.dirty=false;
+                        _c.dirty=0;
                     }
                 }while(0);
 
@@ -114,7 +114,7 @@ int skcam::_shoot(const vf& vf)
     int ret = 0;
 
     _bps += vf.length();
-    if(now > _now+5)
+    if(now > _now + 4)
     {
         _now=now;
         LI("Got: " << _bps/5 << " bps");
@@ -132,7 +132,7 @@ int skcam::_shoot(const vf& vf)
         }
     }
 
-    if(_c.lapse || _c.motion || _c.streame || _c.client)
+    if(_c.timelapse || _c.motion)
     {
         _record(vf.buffer(),vf.length());
     }
@@ -144,7 +144,7 @@ void    skcam::configit(const config& c)
 {
     AutoLock a(&_m);
     _c = c;
-    _c.dirty = true;
+    _c.dirty = PROPS_CHANGED;
 }
 
 void skcam::_record(const uint8_t* pb, size_t l)

@@ -21,7 +21,7 @@ bool  frame::add(const uint8_t* buff,
         _accum+=bytes;
         return true;
     }
-    std::cout<<"cannot add frame " << bytes << " > " << room() << "\n";
+    COUT_("cannot add frame " << bytes << " > " << room() );
     return false;
 }
 
@@ -74,7 +74,8 @@ void* frame::operator new(size_t osz)throw()
     if(Exhaust==false)
     {
         Exhaust=true;
-        std::cout << "." << std::flush;
+        COUT_( ".");
+        std::cout.flush();
     }
     return nullptr; //warn supress
 }
@@ -85,7 +86,6 @@ void   frame::operator delete(void* pv, std::size_t sz)
     UNUS(sz);
     frame* pvf = reinterpret_cast<frame*>(pv);
     pvf->tear();
-
     ++frame::_Free;
 }
 

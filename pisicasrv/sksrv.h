@@ -35,7 +35,7 @@ private:
     bool    _display(skbase&, const std::string&);
     bool    _on_play(skbase&,   const urlreq&, const std::string&);
     bool    _on_player(skbase&, const urlreq& req);
-    bool    _regcamera(const std::string& mac, config& c, const std::string& s);
+    void    _regcamera(const std::string& mac, config& c, const std::string& s);
     void    _authcli(skbase& s,
                      ClisWait& cw,
                      const std::string& mac,

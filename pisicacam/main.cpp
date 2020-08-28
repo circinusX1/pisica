@@ -8,50 +8,54 @@
 #include "jpeger.h"
 #include "vigenere.h"
 
+#ifdef DEBUG
+#   define MOTION_INTERTTIA    3
+#else
+#   define MOTION_INTERTTIA    30
+#endif
+
 bool                __alive = true;
 umutex*             _pm;
-static bool         _dconf = false;
 std::string         _srvpsw;
 std::string         _campsw;
 std::string         _mac;
 
 config       _cfg = {"http://localhost:8888",
                      "/dev/video0",
-                     "", //acl
-                     "", //acl1
-                     "",
-                     "",
-                     "",
-                     false,
-                     0,
-                     640,
-                     480,
-                     15,
-                     100,
-                     500,
-                     128,
-                     100,
-                     1,
-                     80,
-                     1,
-                     250,
-                     100,
-                     0,
-                     8, // pix/nr * nr to eliminate noise pixels
-                     1,
-                     0,
-                     1,
-                     1
+                     "acl", //acl
+                     "acl1", //acl1
+                     "acl2", //acl1
+                     "mac", //acl2
+                     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},    // motionrejectrects
+                     false, // dirty
+                     0xFF,     // random
+                     640,   // w
+                     480,   // h
+                     30,    // fps
+                     0,    // motion pix min / frame
+                     0,    // (disabled) motion pix max per frame (camera pan protect all pix move)
+                     64,    // motion width rect b&w pixels
+                     20,    // motion window pixels rect width
+                     80,    // jpg quality 80%
+                     0,     // timelapse
+                     250,   // dark image
+                     100,   // darm moption pix
+                     0,     // rotate
+                     4,     // pix/nr * nr to eliminate noise pixels
+                     0,     // is there a web webclienton watching
+                     0,     // was motion r/w
+                     "1234567",
+                     0xA5C1C0F0,
                     };
 
-void setts(config* pc);
+void configcam(config* pc);
 
 
 void ControlC (int i)
 {
     (void)(i);
     __alive = false;
-    printf("Exiting...\n");
+    printf("Exiting...");
 }
 
 
@@ -73,15 +77,14 @@ int main(int argc, char *argv[])
     signal(SIGPIPE, SIG_IGN);
     if(!p())
     {
-        std::cout << argv[0] << " running\n";
+        COUT_( argv[0] << " running");
         return -1;
     }
     // srv srcpass campass
     if(argc!=5)
     {
         //              0               1   2               3           4
-        std::cout << argv[0] << "  server server-password cam-password dev/video# \n";
-        std::cout << "\n";
+        COUT_( argv[0] << "  server server-password cam-password dev/video# ");
         exit(1);
     }
 
@@ -94,7 +97,7 @@ int main(int argc, char *argv[])
     if(pdv->open())
     {
         config          cfg;
-        int             moinertia=0;
+        int             moinertia=MOTION_INTERTTIA;
         uint32_t        jpgsz = 0;
         uint8_t*        pjpg = 0;
         size_t          sz;
@@ -106,60 +109,68 @@ int main(int argc, char *argv[])
         int             movepix = 0;
         bool            bstream = false;
         time_t          now = ticksave;
-        frameclient     c(setts, &q, (const urlinfo*)&u, argv[2]);
+        frameclient     c(configcam, &q, (const urlinfo*)&u, argv[2]);
 
+        (void)(tickmove);
         ::srand (time(NULL));
         memcpy(&cfg,&_cfg,sizeof(cfg));
         cfg.dirty = false;
         _srvpsw = argv[2];
         _campsw = argv[3];
         _mac = ::macaddr();
-        std::cout << "cam token:" << _mac << "\n";
+        COUT_( "cam token:" << _mac );
         // mac
-
-
         _pm = &m;
         c.start_thread();
-        std::cout << "MAC: " << _mac << "\n";
+        COUT_( "MAC: " << _mac );
         while(__alive)
         {
             now = gtc();
-            LOCK_(_pm,
-            if(_cfg.dirty)
-            {
-                _cfg.dirty=false;
-                memcpy(&cfg,&_cfg,sizeof(_cfg));
-                pdv->close();
-                delete pdv;
-                pdv = new devvideo(&_cfg);
-                if(pdv->open()==false)
+            do{
+                AutoLock aa(_pm);
+                if(_cfg.dirty)
                 {
-                    std::cout << "CANNOT REPLLY CONFIG\n";
-                    __alive = false;
-                }
-            });
+                    COUT_(">>>>>APPLYING CONFIG");
+                    c.keep_alive();
 
+                    memcpy(&cfg, &_cfg, sizeof(_cfg));
+                    if(_cfg.dirty & CAM_CHANGED)
+                    {
+                        pdv->close();
+                        delete pdv;
+                        pdv = new devvideo(&_cfg);
+                        __alive = pdv->open();
+                        if(!__alive){
+                            pdv->close();
+                            delete pdv;
+                            pdv= nullptr;
+                            break;
+                        }
+                    }
+                    _cfg.dirty = 0;
+                }
+            }while(0);
             sz = 0;
             err = 0;
             const uint8_t*  pb422 = pdv->read(w, h, sz, err);
             if(pb422)
             {
-                //std::cout << "got:" << w << "x" << h << ":" << sz <<  "\n";
+                //COUT_( "got:" << w << "x" << h << ":" << sz <<  "");
                 jpgsz=ffmt->convert420(pb422, w, h, sz, cfg.quality, &pjpg);
                 //
                 // motion
                 //
-                if(cfg.motionl)
+                if((cfg.motionl && cfg.motionh > cfg.motionl) || 
+moinertia)
                 {
                     movepix = pdv->movement();
                     if(--moinertia>0 || ( movepix >= cfg.motionl && movepix <= cfg.motionh))
                     {
-                        //std::cout << "move pix=" << movepix << "\n";
                         bstream = true;
                         cfg.motion = movepix;
                         if( movepix >= cfg.motionl && movepix <= cfg.motionh)
                         {
-                            moinertia = 15;
+                            moinertia = MOTION_INTERTTIA;
                         }
                     }
                     else
@@ -174,57 +185,72 @@ int main(int argc, char *argv[])
                 {
                     if((now - lapsetick) > (uint32_t)cfg.timelapse)
                     {
+                        COUT_("TLAPSE ON");
                         bstream = true;
                         lapsetick = now;
-                        cfg.lapse = 1;
-                    }
-                    else {
-                        cfg.lapse = 0;
                     }
                 }
 
-                if(bstream==false)
+                if(cfg.webclienton>0)
                 {
-                    bstream = true;//cfg.client; // true;
+                    --cfg.webclienton;
+                    bstream = true;
                 }
+
                 if(bstream)
                 {
+                    CDBG("STREAMING ");
                     frame* pf = new frame(true);
                     if(pf)
                     {
                         pf->add((uint8_t*)&jpgsz, sizeof(jpgsz), 0); // 4 bytes length of the frame
                         if(pf->add(pjpg, jpgsz, 0))
                         {
-                            //std::cout << "enquing frame " << jpgsz << "\n";
+                            //COUT_( "enquing frame " << jpgsz ");
                             q.enque(pf);
                         }
                         else
                         {
-                            std::cout << "buffer to small \n";
+                            COUT_( "buffer to small ");
                             exit(2);
                         }
                     }
+                    c.keep_alive();
                 }
-            }else
-            {
-                std::cout << "getting 422 failed\n";
+                else {
+                    CDBG("NO STREAM");
+                }
             }
-            bstream = false;
+            else
+            {
+                CDBG( "getting camera fram 422 format failed");
+            }
+            bstream  = false;
             ticksave = now;
-            ::msleep(50);
+            int sleep = 1000 / cfg.fps;
+            if(sleep < 64) sleep=64;
+            ::msleep(sleep);
+#ifdef DEBUG
+            ::msleep(1000);
+#endif
         }
     }
-    pdv->close();
-    delete pdv;
+    if(pdv){
+        pdv->close();
+        delete pdv;
+    }
     delete ffmt;
     return 0;
 }
 
-
-void setts(config* pc)
+void configcam(config* pc)
 {
-    AutoLock a(_pm);
-    ::memcpy(&_cfg,pc,sizeof(_cfg));
-    ::strcpy(_cfg.acl,xencrypt(_mac,_campsw).c_str());
-    _dconf=true;
+    //strcpy(cloco.acl2, xencrypt(srand, _campsw).c_str());  server
+    std::string random = xdecrypt(pc->acl2, _campsw);
+    if(pc->rndm == ::atoi(random.c_str()))
+    {
+        COUT_("CAMERA CONFIG REQUEST");
+        AutoLock a(_pm);
+        ::memcpy(&_cfg, pc, sizeof(_cfg));
+    }
 }

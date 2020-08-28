@@ -25,8 +25,12 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <sys/time.h>
+#include "config.h"
 
 #define UNUS(x_)   (void)(x_)
+
+
+
 
 typedef unsigned long ulong;
 typedef unsigned long THANDLE;
@@ -597,8 +601,8 @@ class fex
 {
 public:
     std::string ss;
-    fex(const char* s){ss=s;std::cout <<"->{" << s << "\n";}
-    ~fex(){std::cout << "<-}" << ss << "\n";}
+    fex(const char* s){ss=s; COUT_( "->{" << s );}
+    ~fex(){COUT_( "<-}" << ss );}
 };
 #define FEX()   fex x(__PRETTY_FUNCTION__)
 

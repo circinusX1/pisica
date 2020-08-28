@@ -6,7 +6,7 @@ std::string AVAILABLE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 int index(char c) {
     for(size_t ii = 0; ii < AVAILABLE_CHARS.size(); ii++) {
         if(AVAILABLE_CHARS[ii] == c) {
-            // std::cout << ii << " " << c << std::endl;
+            // COUT_( ii << " " << c << std::endl;
             return ii;
         }
     }
@@ -41,7 +41,7 @@ std::string encrypt_vigenere(const std::string& msg, std::string& key) {
 
     //encryption
     for(i = 0; i < msgLen; ++i) {
-        // std::cout << msg[i] << " " << isalnum(msg[i]) << std::endl;
+        // COUT_( msg[i] << " " << isalnum(msg[i]) << std::endl;
         if(isalnum(msg[i]) or msg[i] == ' ') {
             encryptedMsg[i] = AVAILABLE_CHARS[((index(msg[i]) + index(newKey[i])) % AVAILABLE_CHARS.size())];
         } else {
@@ -73,7 +73,7 @@ std::string decrypt_vigenere(const std::string& encryptedMsg, std::string& newKe
 inline std::string encrypt(const std::string& msg, std::string& key) {
     std::string b64_str = base64_encode(msg);
     std::string vigenere_msg = encrypt_vigenere(b64_str, key);
-    // std::cout << vigenere_msg << std::endl;
+    // COUT_( vigenere_msg << std::endl;
     return vigenere_msg;
 }
 

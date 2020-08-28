@@ -293,7 +293,7 @@ public:
     static      bool DefCBCall(void*,unsigned long);
     static void Init();
     static void Uninit();
-    static char*  GetLocalIP(const char* reject);
+    static char*  GetLocalIP(const char* motionrejectrects);
     static bool CTime(void* pT, unsigned long time);
     static SADDR_46 dnsgetip(const char* sip, char* out=0, int port=0);
     static SADDR_46 sip2ip(const char* sip, uint16_t port=0);

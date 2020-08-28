@@ -7,11 +7,13 @@ skbase::skbase(skbase& r,
                                 tcp_cli_sock(r),
                                 _t(t)
 {
+    COUT_("SKBASE " << _t);
     r.detach();
 }
 
 skbase::~skbase()
 {
+    COUT_("~SKBASE " << _t);
 }
 
 int skbase::snd(const char* b, size_t room, uint32_t extra)
@@ -32,7 +34,7 @@ int skbase::snd(const uint8_t* b, size_t room, uint32_t extra)
 
 int  skbase::oi(char* outin, size_t len, size_t maxlen)
 {
-    if(this->send(outin,len)==len)
+    if(this->send(outin,len)==(int)len)
     {
         outin[0]=0;
         int bytes = this->receive(outin,maxlen);
@@ -44,6 +46,7 @@ int  skbase::oi(char* outin, size_t len, size_t maxlen)
 
 bool skbase::destroy(bool be)
 {
+    COUT_("SKBASE DESTROY " << int(_t));
     return tcp_cli_sock::destroy(be);
 }
 
